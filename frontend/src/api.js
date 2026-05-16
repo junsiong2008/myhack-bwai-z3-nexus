@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 export const PROGRAMME_ID = "P2026";
 
 async function apiFetch(path, options = {}) {
