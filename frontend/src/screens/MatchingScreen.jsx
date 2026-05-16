@@ -159,7 +159,7 @@ export default function MatchingScreen({ navigate, ecosystem, addAssignment, pre
             </button>
             {dropdownOpen && (
               <div className="absolute z-10 top-full mt-1 left-0 right-0 nx-card max-h-72 overflow-y-auto shadow-lg">
-                {ecosystem.companies.map(c => (
+                {ecosystem.companies.filter(c => !ecosystem.assignments[c.id]).map(c => (
                   <button key={c.id} onClick={() => handleSelect(c.id)}
                           className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-[#F3F1EC]">
                     <span className="text-[13px] font-medium">{c.name}</span>
