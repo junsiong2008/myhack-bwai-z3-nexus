@@ -8,38 +8,38 @@ export const GEOS = [
   { code: "VN", flag: "🇻🇳" },
   { code: "PH", flag: "🇵🇭" },
 ];
-export const STATUSES = ["Applied", "Screening", "Accepted", "Matched", "Engaged", "Graduated"];
+export const STATUSES = ["Applied", "Screened", "Mentor Assigned", "Engaged", "Graduated"];
 
 const COMPANY_SEED = [
   ["PayEasy", "Fintech", "Seed", "MY", "Applied", ["Mentorship", "Funding"], "Limited market validation"],
-  ["AgriSense", "Agritech", "Pre-seed", "MY", "Matched", ["Legal", "Tech"], null],
+  ["AgriSense", "Agritech", "Pre-seed", "MY", "Mentor Assigned", ["Legal", "Tech"], null],
   ["MedChain", "Healthtech", "Series A", "SG", "Engaged", ["Funding", "BD"], null],
-  ["Skillforge", "Edtech", "Seed", "MY", "Matched", ["Mentorship", "Marketing"], null],
+  ["Skillforge", "Edtech", "Seed", "MY", "Mentor Assigned", ["Mentorship", "Marketing"], null],
   ["RouteWise", "Logistics", "Pre-seed", "ID", "Applied", ["Tech", "BD"], "Single-founder team"],
   ["GreenWatt", "Cleantech", "Seed", "MY", "Engaged", ["Funding", "Regulatory"], null],
   ["UrbanNest", "Proptech", "Pre-seed", "SG", "Applied", ["Mentorship", "Legal"], null],
-  ["LockNode", "Cybersecurity", "Seed", "MY", "Accepted", ["Funding", "Tech"], null],
+  ["LockNode", "Cybersecurity", "Seed", "MY", "Screened", ["Funding", "Tech"], null],
   ["BumiPay", "Fintech", "Idea", "MY", "Applied", ["Mentorship", "Tech"], "Pre-revenue"],
-  ["FarmLink", "Agritech", "Seed", "ID", "Matched", ["Funding", "BD"], null],
+  ["FarmLink", "Agritech", "Seed", "ID", "Mentor Assigned", ["Funding", "BD"], null],
   ["VitalTrack", "Healthtech", "Pre-seed", "MY", "Applied", ["Mentorship", "Tech"], "Regulatory unclear"],
   ["TuitionLah", "Edtech", "Idea", "MY", "Applied", ["Mentorship"], "Crowded market"],
   ["ColdChain.co", "Logistics", "Seed", "TH", "Engaged", ["Funding"], null],
   ["SolarSiti", "Cleantech", "Pre-seed", "PH", "Applied", ["Funding", "Tech"], null],
-  ["NestKL", "Proptech", "Seed", "MY", "Matched", ["BD", "Legal"], null],
-  ["ZeroDay Labs", "Cybersecurity", "Pre-seed", "SG", "Accepted", ["Funding"], null],
+  ["NestKL", "Proptech", "Seed", "MY", "Mentor Assigned", ["BD", "Legal"], null],
+  ["ZeroDay Labs", "Cybersecurity", "Pre-seed", "SG", "Screened", ["Funding"], null],
   ["RinggitGo", "Fintech", "Seed", "MY", "Graduated", ["Mentorship"], null],
   ["PaddyPro", "Agritech", "Idea", "VN", "Applied", ["Tech", "Mentorship"], "No founding agronomist"],
-  ["KlinikQ", "Healthtech", "Seed", "MY", "Matched", ["Funding", "BD"], null],
+  ["KlinikQ", "Healthtech", "Seed", "MY", "Mentor Assigned", ["Funding", "BD"], null],
   ["CikguAI", "Edtech", "Pre-seed", "MY", "Engaged", ["Mentorship", "Tech"], null],
   ["HaulMaster", "Logistics", "Series A", "SG", "Graduated", ["BD"], null],
-  ["EkoBuild", "Cleantech", "Seed", "MY", "Accepted", ["Funding"], null],
+  ["EkoBuild", "Cleantech", "Seed", "MY", "Screened", ["Funding"], null],
   ["RentCove", "Proptech", "Pre-seed", "ID", "Applied", ["Mentorship"], "Weak unit economics"],
   ["SentinelOps", "Cybersecurity", "Seed", "MY", "Engaged", ["BD", "Funding"], null],
-  ["TabungAI", "Fintech", "Pre-seed", "MY", "Matched", ["Tech", "Funding"], null],
+  ["TabungAI", "Fintech", "Pre-seed", "MY", "Mentor Assigned", ["Tech", "Funding"], null],
   ["HarvestHub", "Agritech", "Seed", "PH", "Applied", ["Mentorship", "BD"], null],
   ["TeraMed", "Healthtech", "Idea", "MY", "Applied", ["Mentorship"], "Untested clinical model"],
   ["LearnKaki", "Edtech", "Seed", "MY", "Engaged", ["BD"], null],
-  ["KargoSatu", "Logistics", "Pre-seed", "MY", "Accepted", ["Funding", "Tech"], null],
+  ["KargoSatu", "Logistics", "Pre-seed", "MY", "Screened", ["Funding", "Tech"], null],
   ["HijauTech", "Cleantech", "Idea", "TH", "Applied", ["Mentorship", "Tech"], "Long R&D runway"],
 ];
 
@@ -245,7 +245,7 @@ export const STAGE_DISTRIBUTION = [
 export function computeEngagement(company, mentorId) {
   if (!mentorId) return { state: "unassigned", sessions: 0, lastSessionDays: null, atRisk: false };
   const seed = company.id.charCodeAt(2) + company.id.charCodeAt(3);
-  if (company.status === "Applied" || company.status === "Screening") {
+  if (company.status === "Applied" || company.status === "Screened") {
     return { state: "pending", sessions: 0, lastSessionDays: null, atRisk: false };
   }
   if (company.status === "Graduated") {

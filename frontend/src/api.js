@@ -13,14 +13,6 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
-const STATUS_MAP = {
-  "Applied": "Applied",
-  "Screened": "Screening",
-  "Mentor Assigned": "Matched",
-  "Engaged": "Engaged",
-  "Graduated": "Graduated",
-};
-
 export function adaptCompany(c) {
   return {
     id: c.id,
@@ -28,7 +20,7 @@ export function adaptCompany(c) {
     sector: c.sector,
     stage: c.stage,
     geo: c.geography,
-    status: STATUS_MAP[c.pipeline_status] || c.pipeline_status || "Applied",
+    status: c.pipeline_status || "Applied",
     needs: c.needs || [],
     risk_flag: null,
     problem: c.pitch_summary || "",
