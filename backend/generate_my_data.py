@@ -93,43 +93,6 @@ def pick_company_name(sector, used):
     base = rng.choice(pool)
     return f"{base}{rng.randint(2,9)}"
 
-# ── Generate 300 companies ─────────────────────────────────────────────────────
-companies = []
-used_names = set()
-
-# Stage/geo distribution weights
-stage_weights = [0.12, 0.22, 0.38, 0.20, 0.08]   # Idea,Pre-seed,Seed,SerA,SerB
-geo_weights   = [0.68, 0.12, 0.08, 0.05, 0.04, 0.03]  # MY,SG,ID,TH,VN,PH
-
-sector_cycle = SECTORS * 30   # 30 companies per sector = 300
-
-for i, sector in enumerate(sector_cycle, start=1):
-    stage    = rng.choices(STAGES, weights=stage_weights)[0]
-    geo      = rng.choices(GEOS,   weights=geo_weights)[0]
-    name     = pick_company_name(sector, used_names)
-    used_names.add(name)
-
-    n_needs  = rng.randint(1, 3)
-    needs    = rng.sample(NEEDS, n_needs)
-
-    prog_year = rng.choice([2022, 2023, 2024, 2025])
-    team_size = rng.randint(2, 40)
-    founding  = rng.randint(2018, 2025)
-    pip_stage = rng.choices(PIPELINE_STAGES, weights=[0.15,0.20,0.30,0.20,0.15])[0]
-
-    companies.append({
-        "id":             f"C{i:04d}",
-        "name":           name,
-        "sector":         sector,
-        "stage":          stage,
-        "geography":      geo,
-        "team_size":      team_size,
-        "founding_year":  founding,
-        "needs":          needs,
-        "programme_year": prog_year,
-        "pipeline_stage": pip_stage,
-    })
-
 # ── Mentor data ────────────────────────────────────────────────────────────────
 MENTOR_PROFILES = [
     # (name, primary, secondary, geo, yrs_exp, bio_snippet)
@@ -285,7 +248,7 @@ MENTOR_PROFILES = [
      "Product manager at Great Eastern Takaful; launched digital Takaful micro-coverage for gig workers with Grab and foodpanda integration. Expert in BNM takaful licensing and embedded insurance APIs."),
 ]
 
-# ── Generate 80 mentors ────────────────────────────────────────────────────────
+# ── Generate 80 mentors (must come before companies so we can assign them) ────
 mentors = []
 for i, (name, primary, secondary, geo, yrs, bio) in enumerate(MENTOR_PROFILES[:80], start=1):
     capacity  = rng.randint(10, 25)
@@ -307,6 +270,51 @@ for i, (name, primary, secondary, geo, yrs, bio) in enumerate(MENTOR_PROFILES[:8
         "reuse_eligible":   reuse,
         "bio":              bio,
     })
+
+ASSIGNED_STAGES = {"Mentor Assigned", "Engaged", "Graduated"}
+
+# ── Generate 300 companies ─────────────────────────────────────────────────────
+companies = []
+used_names = set()
+
+# Stage/geo distribution weights
+stage_weights = [0.12, 0.22, 0.38, 0.20, 0.08]   # Idea,Pre-seed,Seed,SerA,SerB
+geo_weights   = [0.68, 0.12, 0.08, 0.05, 0.04, 0.03]  # MY,SG,ID,TH,VN,PH
+
+sector_cycle = SECTORS * 30   # 30 companies per sector = 300
+
+for i, sector in enumerate(sector_cycle, start=1):
+    stage    = rng.choices(STAGES, weights=stage_weights)[0]
+    geo      = rng.choices(GEOS,   weights=geo_weights)[0]
+    name     = pick_company_name(sector, used_names)
+    used_names.add(name)
+
+    n_needs  = rng.randint(1, 3)
+    needs    = rng.sample(NEEDS, n_needs)
+
+    prog_year = rng.choice([2022, 2023, 2024, 2025])
+    team_size = rng.randint(2, 40)
+    founding  = rng.randint(2018, 2025)
+    pip_stage = rng.choices(PIPELINE_STAGES, weights=[0.15,0.20,0.30,0.20,0.15])[0]
+
+    company_entry = {
+        "id":             f"C{i:04d}",
+        "name":           name,
+        "sector":         sector,
+        "stage":          stage,
+        "geography":      geo,
+        "team_size":      team_size,
+        "founding_year":  founding,
+        "needs":          needs,
+        "programme_year": prog_year,
+        "pipeline_stage": pip_stage,
+    }
+
+    # Assign a mentor (by name) for stages that imply one exists
+    if pip_stage in ASSIGNED_STAGES:
+        company_entry["assigned_mentor"] = rng.choice(mentors)["name"]
+
+    companies.append(company_entry)
 
 # ── Generate matches (company-mentor pairs with computed features) ─────────────
 def domain_score(sector, primary, secondary):

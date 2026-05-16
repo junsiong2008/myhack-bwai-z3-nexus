@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-import json, os, pickle, random, tempfile
+import json, os, pickle, tempfile
 import pandas as pd
 import numpy as np
 
@@ -52,9 +52,8 @@ STAGE_IDX  = _MODEL_BUNDLE['stage_idx']
 GEO_IDX    = _MODEL_BUNDLE['geo_idx']
 
 STATUSES   = ["Applied","Screened","Mentor Assigned","Engaged","Graduated"]
-_rng = random.Random(42)
-COMPANY_STATUS = {c['id']: _rng.choice(STATUSES) for c in _COMPANIES}
-COMPANY_MENTOR = {}
+COMPANY_STATUS = {c['id']: c.get('pipeline_stage', 'Applied') for c in _COMPANIES}
+COMPANY_MENTOR = {c['id']: c['assigned_mentor'] for c in _COMPANIES if c.get('assigned_mentor')}
 
 # ── Schemas ────────────────────────────────────────────────────────────────────
 class IntakeRequest(BaseModel):
