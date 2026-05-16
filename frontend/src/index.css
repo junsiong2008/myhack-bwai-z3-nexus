@@ -175,6 +175,58 @@ html.dark .bg-\[\#F4FBF8\] { background-color: var(--nx-success-50) !important; 
 html.dark .bg-\[\#EFEDE6\] { background-color: var(--nx-hover) !important; }
 html.dark select, html.dark textarea { background: var(--nx-card); color: var(--nx-text); border-color: var(--nx-border); }
 
+/* ── Table row hover ───────────────────────────────────────── */
+.nx-tr { transition: background 0.1s ease; }
+.nx-tr:hover { background: #F3F1EC; }
+html.dark .nx-tr:hover { background: #303030; }
+
+/* ── Sector badge colours (light → dark) ───────────────────── */
+.nx-sector-fintech,
+.nx-sector-saas         { --badge-bg: #EAF2FB; --badge-fg: #185FA5; }
+.nx-sector-agritech     { --badge-bg: #E6F5EF; --badge-fg: #1D9E75; }
+.nx-sector-healthtech   { --badge-bg: #E1F2F5; --badge-fg: #1B7C8C; }
+.nx-sector-edtech       { --badge-bg: #FBF1E1; --badge-fg: #8E5610; }
+.nx-sector-logistics    { --badge-bg: #EFE9F8; --badge-fg: #5C3A99; }
+.nx-sector-cleantech    { --badge-bg: #E8F3DC; --badge-fg: #4F7A1F; }
+.nx-sector-proptech     { --badge-bg: #F5E9F0; --badge-fg: #9B3275; }
+.nx-sector-cybersecurity{ --badge-bg: #FCEAEA; --badge-fg: #B43938; }
+
+.nx-sector-ecommerce{ --badge-bg: #FDEEED; --badge-fg: #A03030; }
+.nx-sector-aiml     { --badge-bg: #EEE8FA; --badge-fg: #6040B0; }
+.nx-sector-iot      { --badge-bg: #E3EEF5; --badge-fg: #2E6A8C; }
+
+html.dark .nx-sector-ecommerce { --badge-bg: rgba(160,48,48,0.18);   --badge-fg: #F08888; }
+html.dark .nx-sector-aiml      { --badge-bg: rgba(96,64,176,0.18);   --badge-fg: #B090F0; }
+html.dark .nx-sector-iot       { --badge-bg: rgba(46,106,140,0.18);  --badge-fg: #58B0D4; }
+
+html.dark .nx-sector-fintech,
+html.dark .nx-sector-saas         { --badge-bg: rgba(24,95,165,0.18);  --badge-fg: #6DB3F0; }
+html.dark .nx-sector-agritech     { --badge-bg: rgba(29,158,117,0.18); --badge-fg: #4DCAA6; }
+html.dark .nx-sector-healthtech   { --badge-bg: rgba(27,124,140,0.18); --badge-fg: #40C0D2; }
+html.dark .nx-sector-edtech       { --badge-bg: rgba(186,117,23,0.18); --badge-fg: #E0A040; }
+html.dark .nx-sector-logistics    { --badge-bg: rgba(92,58,153,0.18);  --badge-fg: #A880E8; }
+html.dark .nx-sector-cleantech    { --badge-bg: rgba(79,122,31,0.18);  --badge-fg: #88C240; }
+html.dark .nx-sector-proptech     { --badge-bg: rgba(155,50,117,0.18); --badge-fg: #D870B8; }
+html.dark .nx-sector-cybersecurity{ --badge-bg: rgba(180,57,56,0.18);  --badge-fg: #F08080; }
+
+/* ── Status badge colours (light → dark) ───────────────────── */
+.nx-status-applied           { --badge-bg: #FBF1E1; --badge-fg: #8E5610; --badge-border: transparent; }
+.nx-status-screened          { --badge-bg: #EAF2FB; --badge-fg: #185FA5; --badge-border: transparent; }
+.nx-status-screening         { --badge-bg: transparent; --badge-fg: #185FA5; --badge-border: #185FA5; }
+.nx-status-accepted          { --badge-bg: #185FA5; --badge-fg: #FFFFFF; --badge-border: transparent; }
+.nx-status-matched           { --badge-bg: transparent; --badge-fg: #1D9E75; --badge-border: #1D9E75; }
+.nx-status-mentor-assigned   { --badge-bg: #E6F5EF; --badge-fg: #1D9E75; --badge-border: transparent; }
+.nx-status-engaged           { --badge-bg: #1D9E75; --badge-fg: #FFFFFF; --badge-border: transparent; }
+.nx-status-graduated         { --badge-bg: #EFE9F8; --badge-fg: #5C3A99; --badge-border: transparent; }
+
+html.dark .nx-status-applied         { --badge-bg: rgba(186,117,23,0.18);  --badge-fg: #E0A040; }
+html.dark .nx-status-screened        { --badge-bg: rgba(24,95,165,0.18);   --badge-fg: #6DB3F0; }
+html.dark .nx-status-screening       { --badge-fg: #6DB3F0; --badge-border: #6DB3F0; }
+html.dark .nx-status-matched         { --badge-fg: #4DCAA6; --badge-border: #4DCAA6; }
+html.dark .nx-status-mentor-assigned { --badge-bg: rgba(29,158,117,0.18);  --badge-fg: #4DCAA6; }
+html.dark .nx-status-engaged         { --badge-bg: rgba(29,158,117,0.22);  --badge-fg: #4DCAA6; }
+html.dark .nx-status-graduated       { --badge-bg: rgba(92,58,153,0.18);   --badge-fg: #A880E8; }
+
 /* SVG text color overrides for dark mode */
 html.dark svg text { fill: var(--nx-text); }
 html.dark svg text[fill="#9C9B96"] { fill: var(--nx-text-3); }

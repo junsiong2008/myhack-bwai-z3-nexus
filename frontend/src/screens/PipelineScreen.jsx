@@ -258,7 +258,7 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
               const suggestionsError = rowMenu?.error ?? null;
               const outcome = ecosystem.outcomes[c.id];
               return (
-                <tr key={c.id} className="hover:bg-[#FBFBFA] transition"
+                <tr key={c.id} className="nx-tr"
                     style={{ borderBottom: idx === filtered.length - 1 ? "none" : "1px solid var(--nx-border-soft)" }}>
                   <td className="px-4 py-3">
                     <button onClick={() => navigate("matching", { companyName: c.name })}
@@ -296,8 +296,10 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
                   </td>
                   <td className="px-3 py-3 text-right pr-4 relative">
                     <button onClick={() => handleOpenRowMenu(c.id)}
-                            className="text-[12px] font-medium px-2.5 py-1 rounded-md border hover:bg-[#F3F1EC]"
-                            style={{ borderColor: "var(--nx-border)", color: "var(--nx-text)", background: "var(--nx-card)" }}>
+                            className="text-[12px] font-medium px-2.5 py-1 rounded-md border"
+                            style={{ borderColor: "var(--nx-border)", color: "var(--nx-text)", background: "var(--nx-card)" }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "var(--nx-hover)"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = "var(--nx-card)"; }}>
                       {mentor ? "Reassign" : "Assign"}
                     </button>
                     {(suggestions || suggestionsError) && (
@@ -309,7 +311,9 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
                           <div className="px-3 py-3 text-[12px]" style={{ color: "var(--nx-text-2)" }}>{suggestionsError}</div>
                         ) : suggestions.map(s => (
                           <button key={s.mentor_id} onClick={() => handleAssignRow(c, s.mentor_id)}
-                                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F3F1EC]">
+                                  className="w-full flex items-center gap-2 px-3 py-2"
+                                  onMouseEnter={e => { e.currentTarget.style.background = "var(--nx-hover)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
                             <Avatar name={s.name} size={26} />
                             <div className="flex-1 min-w-0">
                               <div className="text-[12px] font-semibold truncate">{s.name}</div>

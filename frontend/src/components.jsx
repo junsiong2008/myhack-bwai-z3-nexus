@@ -2,41 +2,55 @@ import { useState, useCallback, createContext, useContext } from 'react';
 import { Check, AlertTriangle, Sparkles } from './icons';
 import { GEOS } from './data';
 
-export const SECTOR_COLORS = {
-  Fintech:       { bg: "#EAF2FB", fg: "#185FA5" },
-  Agritech:      { bg: "#E6F5EF", fg: "#1D9E75" },
-  Healthtech:    { bg: "#E1F2F5", fg: "#1B7C8C" },
-  Edtech:        { bg: "#FBF1E1", fg: "#8E5610" },
-  Logistics:     { bg: "#EFE9F8", fg: "#5C3A99" },
-  Cleantech:     { bg: "#E8F3DC", fg: "#4F7A1F" },
-  Proptech:      { bg: "#F5E9F0", fg: "#9B3275" },
-  Cybersecurity: { bg: "#FCEAEA", fg: "#B43938" },
-  SaaS:          { bg: "#EAF2FB", fg: "#185FA5" },
+const SECTOR_CLASS = {
+  Fintech:       "nx-sector-fintech",
+  Agritech:      "nx-sector-agritech",
+  Healthtech:    "nx-sector-healthtech",
+  Edtech:        "nx-sector-edtech",
+  Logistics:     "nx-sector-logistics",
+  Cleantech:     "nx-sector-cleantech",
+  Proptech:      "nx-sector-proptech",
+  Cybersecurity: "nx-sector-cybersecurity",
+  SaaS:          "nx-sector-saas",
+  "E-commerce":  "nx-sector-ecommerce",
+  "AI/ML":       "nx-sector-aiml",
+  IoT:           "nx-sector-iot",
 };
 
-export const STATUS_STYLES = {
-  Applied:    { bg: "#FBF1E1", fg: "#8E5610", border: "transparent", filled: true },
-  Screening:  { bg: "transparent", fg: "#185FA5", border: "#185FA5", filled: false },
-  Accepted:   { bg: "#185FA5", fg: "#FFFFFF", border: "transparent", filled: true },
-  Matched:    { bg: "transparent", fg: "#1D9E75", border: "#1D9E75", filled: false },
-  Engaged:    { bg: "#1D9E75", fg: "#FFFFFF", border: "transparent", filled: true },
-  Graduated:  { bg: "#EFE9F8", fg: "#5C3A99", border: "transparent", filled: true },
+const STATUS_CLASS = {
+  Applied:          "nx-status-applied",
+  Screened:         "nx-status-screened",
+  Screening:        "nx-status-screening",
+  Accepted:         "nx-status-accepted",
+  Matched:          "nx-status-matched",
+  "Mentor Assigned":"nx-status-mentor-assigned",
+  Engaged:          "nx-status-engaged",
+  Graduated:        "nx-status-graduated",
 };
+
+const STATUS_BORDER = new Set(["Screening", "Matched"]);
 
 export const SectorBadge = ({ sector, size = "sm" }) => {
-  const c = SECTOR_COLORS[sector] || { bg: "#F0EFEA", fg: "#6B6A65" };
+  const cls = SECTOR_CLASS[sector] || "";
   const pad = size === "lg" ? "px-2.5 py-1 text-xs" : "px-2 py-0.5 text-[11px]";
   return (
-    <span className={`inline-flex items-center rounded-full font-medium ${pad}`}
-          style={{ background: c.bg, color: c.fg }}>{sector}</span>
+    <span className={`inline-flex items-center rounded-full font-medium ${pad} ${cls}`}
+          style={{ background: "var(--badge-bg,#F0EFEA)", color: "var(--badge-fg,#6B6A65)" }}>
+      {sector}
+    </span>
   );
 };
 
 export const StatusBadge = ({ status }) => {
-  const s = STATUS_STYLES[status] || STATUS_STYLES.Applied;
+  const cls = STATUS_CLASS[status] || "nx-status-applied";
+  const hasBorder = STATUS_BORDER.has(status);
   return (
-    <span className="inline-flex items-center rounded-full font-medium px-2 py-0.5 text-[11px]"
-          style={{ background: s.bg, color: s.fg, border: s.border === "transparent" ? "none" : `1px solid ${s.border}` }}>
+    <span className={`inline-flex items-center rounded-full font-medium px-2 py-0.5 text-[11px] ${cls}`}
+          style={{
+            background: "var(--badge-bg,transparent)",
+            color: "var(--badge-fg,#6B6A65)",
+            border: hasBorder ? "1px solid var(--badge-border,currentColor)" : "none",
+          }}>
       {status}
     </span>
   );
