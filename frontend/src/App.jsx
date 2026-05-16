@@ -7,6 +7,7 @@ import MatchingScreen from './screens/MatchingScreen';
 import PipelineScreen from './screens/PipelineScreen';
 import GraphScreen from './screens/GraphScreen';
 import FlywheelScreen from './screens/FlywheelScreen';
+import ApplicantScreen from './screens/ApplicantScreen';
 import { fetchCompanies, fetchMentors, assignMentor, PROGRAMME_ID } from './api';
 
 const NAV_ITEMS = [
@@ -121,7 +122,7 @@ function Sidebar({ active, onNavigate }) {
   );
 }
 
-function TopBar({ screenKey, dark, onToggleDark }) {
+function TopBar({ screenKey, dark, onToggleDark, onAvatarClick }) {
   const meta = SCREEN_META[screenKey];
   return (
     <div className="sticky top-0 z-20 bg-[var(--nx-surface)] border-b" style={{ borderColor: "var(--nx-border)" }}>
@@ -138,6 +139,9 @@ function TopBar({ screenKey, dark, onToggleDark }) {
                 style={{ color: "var(--nx-text-2)", background: "transparent" }}
                 title={dark ? "Switch to light mode" : "Switch to dark mode"}>
           {dark ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+        <button onClick={onAvatarClick} className="rounded-full transition opacity-90 hover:opacity-100" title="Switch to Applicant Portal">
+          <Avatar name="Keat Hong" size={28} />
         </button>
       </div>
 
@@ -174,13 +178,18 @@ function TopBar({ screenKey, dark, onToggleDark }) {
                 title={dark ? "Switch to light mode" : "Switch to dark mode"}>
           {dark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
-        <div className="flex items-center gap-2 pl-3 ml-1 border-l" style={{ borderColor: "var(--nx-border)" }}>
+        <button onClick={onAvatarClick}
+                className="flex items-center gap-2 pl-3 ml-1 border-l rounded-lg px-2 py-1 transition"
+                style={{ borderColor: "var(--nx-border)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--nx-hover)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                title="Switch to Applicant Portal">
           <Avatar name="Keat Hong" size={28} />
           <div className="leading-tight">
             <div className="text-[12.5px] font-semibold">Keat Hong</div>
             <div className="text-[11px]" style={{ color: "var(--nx-text-3)" }}>Programme Manager</div>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Screen title */}
@@ -192,9 +201,76 @@ function TopBar({ screenKey, dark, onToggleDark }) {
   );
 }
 
+function ApplicantPortal({ dark, onToggleDark, onExitPortal, addPendingApplication }) {
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--nx-surface)" }}>
+      {/* Portal header */}
+      <header className="border-b" style={{ background: "var(--nx-card)", borderColor: "var(--nx-border)" }}>
+        <div className="max-w-2xl mx-auto px-5 sm:px-8 py-4 flex items-center gap-4">
+          <NexusLogo size={26} />
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] font-medium uppercase tracking-wide" style={{ color: "var(--nx-text-3)" }}>
+              Application Portal
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
+                style={{ background: "var(--nx-success-50)", color: "#1D9E75" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#1D9E75" }} /> Accepting applications
+          </span>
+          <button onClick={onToggleDark}
+                  className="p-1.5 rounded-md"
+                  style={{ color: "var(--nx-text-2)" }}
+                  title={dark ? "Switch to light mode" : "Switch to dark mode"}>
+            {dark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        </div>
+      </header>
+
+      {/* Hero band */}
+      <div className="border-b" style={{ background: "var(--nx-primary)", borderColor: "transparent" }}>
+        <div className="max-w-2xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
+          <div className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.6)" }}>
+            CREST 2026 Malaysia
+          </div>
+          <h1 className="text-[26px] sm:text-[32px] font-semibold tracking-tight text-white leading-tight">
+            Apply to join the programme
+          </h1>
+          <p className="text-[14px] mt-2 leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
+            Cradle's CREST accelerator connects high-potential startups with seasoned mentors.
+            Fill in the form below and our AI-powered intake system will process your application.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-4 text-[12px]" style={{ color: "rgba(255,255,255,0.65)" }}>
+            <span>📅 Mar – Sep 2026</span>
+            <span>📍 Kuala Lumpur, Malaysia</span>
+            <span>🏢 Up to 30 startups</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Form area */}
+      <main className="flex-1 px-5 sm:px-8 py-8">
+        <div className="max-w-2xl mx-auto">
+          <ApplicantScreen addPendingApplication={addPendingApplication} />
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t py-5 px-5 text-center" style={{ borderColor: "var(--nx-border-soft)" }}>
+        <button onClick={onExitPortal}
+                className="text-[11.5px] hover:underline transition"
+                style={{ color: "var(--nx-text-3)" }}>
+          Programme staff? Access the manager view →
+        </button>
+      </footer>
+    </div>
+  );
+}
+
 export default function App() {
   const [route, setRoute] = useState(() => window.location.hash.replace("#/", "") || "dashboard");
   const [navParams, setNavParams] = useState(null);
+  const [role, setRole] = useState("pm");
+  const [pendingApplications, setPendingApplications] = useState([]);
   const [dark, setDark] = useState(() => {
     const stored = localStorage.getItem("nx-dark");
     if (stored !== null) return stored === "true";
@@ -290,8 +366,11 @@ export default function App() {
     setReactivatedMentors(prev => Array.from(new Set([...prev, ...mentorIds])));
   };
 
+  const addPendingApplication = (app) => setPendingApplications(prev => [...prev, app]);
+  const clearPendingApplications = () => setPendingApplications([]);
+
   const silentRefresh = useCallback(() => loadData({ silent: true }), [loadData]);
-  const sharedProps = { ecosystem, addCompany, addAssignment, closeProgramme, activateReuseMentors, navigate, preselect: navParams, refreshData: silentRefresh };
+  const sharedProps = { ecosystem, addCompany, addAssignment, closeProgramme, activateReuseMentors, navigate, preselect: navParams, refreshData: silentRefresh, pendingApplications, clearPendingApplications };
 
   const renderScreen = () => {
     switch (route) {
@@ -305,37 +384,57 @@ export default function App() {
     }
   };
 
+  const isPM = role === "pm";
+
   return (
     <ToastProvider>
-      <div className="flex min-h-screen">
-        <Sidebar active={route} onNavigate={navigate} />
-        <main className="flex-1 min-w-0 flex flex-col">
-          <TopBar screenKey={route} dark={dark} onToggleDark={() => setDark(d => !d)} />
-          <div className="px-4 md:px-8 pt-6 pb-24 md:pb-12 flex-1" style={{ background: "var(--nx-surface)" }}>
-            {loading ? (
-              <div className="flex flex-col items-center justify-center h-64 gap-3">
-                <RefreshCw size={24} className="animate-spin" style={{ color: "var(--nx-text-3)" }} />
-                <span className="text-[13px]" style={{ color: "var(--nx-text-3)" }}>Loading data…</span>
-              </div>
-            ) : loadError ? (
-              <div className="flex flex-col items-center justify-center h-64 gap-3">
-                <div className="text-[13px] font-medium" style={{ color: "var(--nx-text)" }}>Failed to load data</div>
-                <div className="text-[12px] mono" style={{ color: "var(--nx-text-3)" }}>{loadError}</div>
-                <button onClick={loadData}
-                        className="mt-2 px-4 py-1.5 rounded-md text-[13px] font-medium"
-                        style={{ background: "#185FA5", color: "#fff" }}>
-                  Retry
-                </button>
-              </div>
-            ) : (
-              <div key={route} className="nx-fade-in">
-                {renderScreen()}
-              </div>
-            )}
-          </div>
-        </main>
+      {/* Applicant portal — always mounted to preserve form state */}
+      <div className={isPM ? "hidden" : ""}>
+        <ApplicantPortal
+          dark={dark}
+          onToggleDark={() => setDark(d => !d)}
+          onExitPortal={() => setRole("pm")}
+          addPendingApplication={addPendingApplication}
+        />
       </div>
-      <MobileBottomNav active={route} onNavigate={navigate} />
+
+      {/* PM layout — always mounted to preserve screen state (e.g. IntakeScreen parse results) */}
+      <div className={isPM ? "" : "hidden"}>
+        <div className="flex min-h-screen">
+          <Sidebar active={route} onNavigate={navigate} />
+          <main className="flex-1 min-w-0 flex flex-col">
+            <TopBar
+              screenKey={route}
+              dark={dark}
+              onToggleDark={() => setDark(d => !d)}
+              onAvatarClick={() => setRole("applicant")}
+            />
+            <div className="px-4 md:px-8 pt-6 pb-24 md:pb-12 flex-1" style={{ background: "var(--nx-surface)" }}>
+              {loading ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-3">
+                  <RefreshCw size={24} className="animate-spin" style={{ color: "var(--nx-text-3)" }} />
+                  <span className="text-[13px]" style={{ color: "var(--nx-text-3)" }}>Loading data…</span>
+                </div>
+              ) : loadError ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-3">
+                  <div className="text-[13px] font-medium" style={{ color: "var(--nx-text)" }}>Failed to load data</div>
+                  <div className="text-[12px] mono" style={{ color: "var(--nx-text-3)" }}>{loadError}</div>
+                  <button onClick={loadData}
+                          className="mt-2 px-4 py-1.5 rounded-md text-[13px] font-medium"
+                          style={{ background: "#185FA5", color: "#fff" }}>
+                    Retry
+                  </button>
+                </div>
+              ) : (
+                <div key={route} className="nx-fade-in">
+                  {renderScreen()}
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+        <MobileBottomNav active={route} onNavigate={navigate} />
+      </div>
     </ToastProvider>
   );
 }
