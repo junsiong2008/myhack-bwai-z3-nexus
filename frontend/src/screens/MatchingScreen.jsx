@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast, SectorBadge, StageBadge, GeoBadge, StatusBadge, Avatar, MatchScoreBar, CapacityBar, EmptyState } from '../components';
 import { Zap, Loader, ChevronDown, AlertTriangle, Check, Star, RefreshCw } from '../icons';
-import { fakeMatch } from '../data';
 import { runMatch } from '../api';
 
 function MentorCard({ mentor, rank, approved, skipped, onApprove, onSkip }) {
@@ -99,8 +98,7 @@ export default function MatchingScreen({ navigate, ecosystem, addAssignment, pre
       setResults(data.top_matches);
       setTotalEvaluated(data.total_evaluated);
     } catch (err) {
-      console.warn("Match API unavailable, using fallback:", err.message);
-      setResults(fakeMatch(c, 3));
+      setResults({ error: err.message });
       setTotalEvaluated(null);
     } finally {
       setMatching(false);
@@ -216,7 +214,7 @@ export default function MatchingScreen({ navigate, ecosystem, addAssignment, pre
         <div className="nx-card p-6 min-h-[560px]">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-[18px] font-semibold tracking-tight">Match results</h2>
-            {results && (
+            {results && !results.error && (
               <span className="text-[12px] text-[var(--nx-text-2)]">
                 <span className="mono">XGBoost · AUC 0.8169</span> · top {results.length}{totalEvaluated ? ` of ${totalEvaluated}` : ""} mentors
               </span>
@@ -251,7 +249,13 @@ export default function MatchingScreen({ navigate, ecosystem, addAssignment, pre
             </div>
           )}
 
-          {results && (
+          {results?.error && (
+            <EmptyState icon={AlertTriangle}
+              title="Match failed"
+              body={results.error} />
+          )}
+
+          {results && !results.error && (
             <div className="space-y-3 nx-fade-in">
               {results.map((m, idx) => (
                 <MentorCard key={m.mentor_id}

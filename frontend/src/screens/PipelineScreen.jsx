@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useToast, SectorBadge, StageBadge, GeoBadge, StatusBadge, Avatar, ProgressBar } from '../components';
 import { Zap, Loader, Search, ChevronDown, AlertTriangle, Check, RefreshCw, X } from '../icons';
-import { STATUSES, fakeMatch, computeEngagement } from '../data';
+import { STATUSES, computeEngagement } from '../data';
 import { bulkAssign, runMatch, PROGRAMME_ID } from '../api';
 import CloseProgrammeModal from './CloseProgrammeModal';
 
@@ -55,30 +55,7 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
       setBulkProgress(100);
       toast.push(data.message || `${data.assigned_count} companies auto-assigned`, "success");
     } catch (err) {
-      // Fallback: local fake bulk assign
-      console.warn("Bulk assign API failed, using fallback:", err.message);
-      const candidates = ecosystem.companies.filter(c => c.status === "Applied" && !ecosystem.assignments[c.id]);
-      if (candidates.length === 0) {
-        toast.push("No unmatched Applied companies", "warning");
-        setBulkRunning(false);
-        return;
-      }
-      let i = 0;
-      const tick = () => {
-        if (i >= candidates.length) {
-          setBulkRunning(false);
-          toast.push(`${candidates.length} companies matched (local fallback)`, "success");
-          return;
-        }
-        const c = candidates[i];
-        const top = fakeMatch(c, 1)[0];
-        addAssignment(c.id, top.mentor_id, "Matched");
-        i++;
-        setBulkProgress(Math.round((i / candidates.length) * 100));
-        setTimeout(tick, 90);
-      };
-      setTimeout(tick, 250);
-      return;
+      toast.push(`Bulk assign failed: ${err.message}`, "error");
     }
     setBulkRunning(false);
   };
@@ -94,9 +71,8 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
     try {
       const data = await runMatch(companyId, 3);
       setRowSuggestions({ companyId, matches: data.top_matches });
-    } catch {
-      const c = ecosystem.companies.find(x => x.id === companyId);
-      if (c) setRowSuggestions({ companyId, matches: fakeMatch(c, 3) });
+    } catch (err) {
+      setRowSuggestions({ companyId, matches: [], error: err.message });
     }
   };
 
@@ -235,9 +211,9 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
             {filtered.map((c, idx) => {
               const mentorId = ecosystem.assignments[c.id];
               const mentor = mentorId ? mentors.find(m => m.id === mentorId) : null;
-              const suggestions = (openRowMenu === c.id && rowSuggestions?.companyId === c.id)
-                ? rowSuggestions.matches
-                : null;
+              const rowMenu = (openRowMenu === c.id && rowSuggestions?.companyId === c.id) ? rowSuggestions : null;
+              const suggestions = rowMenu && !rowMenu.error ? rowMenu.matches : null;
+              const suggestionsError = rowMenu?.error ?? null;
               const eng = computeEngagement(c, mentorId);
               const outcome = ecosystem.outcomes[c.id];
               return (
@@ -294,12 +270,14 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
                             style={{ borderColor: "var(--nx-border)", color: "var(--nx-text)", background: "var(--nx-card)" }}>
                       {mentor ? "Reassign" : "Assign"}
                     </button>
-                    {suggestions && (
+                    {(suggestions || suggestionsError) && (
                       <div className="absolute right-4 top-full mt-1 z-10 nx-card shadow-lg w-72 text-left">
                         <div className="px-3 py-2 border-b text-[11px] uppercase tracking-wide text-[var(--nx-text-2)] font-medium" style={{ borderColor: "var(--nx-border-soft)" }}>
                           Top mentor suggestions
                         </div>
-                        {suggestions.map(s => (
+                        {suggestionsError ? (
+                          <div className="px-3 py-3 text-[12px]" style={{ color: "var(--nx-text-2)" }}>{suggestionsError}</div>
+                        ) : suggestions.map(s => (
                           <button key={s.mentor_id} onClick={() => handleAssignRow(c, s.mentor_id)}
                                   className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F3F1EC]">
                             <Avatar name={s.name} size={26} />

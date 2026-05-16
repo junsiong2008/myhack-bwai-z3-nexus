@@ -7,7 +7,6 @@ import MatchingScreen from './screens/MatchingScreen';
 import PipelineScreen from './screens/PipelineScreen';
 import GraphScreen from './screens/GraphScreen';
 import FlywheelScreen from './screens/FlywheelScreen';
-import { COMPANIES, MENTORS, DEFAULT_ASSIGNMENTS } from './data';
 import { fetchCompanies, fetchMentors, assignMentor } from './api';
 
 const NAV_ITEMS = [
@@ -171,14 +170,18 @@ export default function App() {
     localStorage.setItem("nx-dark", dark);
   }, [dark]);
 
-  const [companies, setCompanies] = useState(COMPANIES);
-  const [assignments, setAssignments] = useState(DEFAULT_ASSIGNMENTS);
-  const [mentors, setMentors] = useState(MENTORS);
+  const [companies, setCompanies] = useState(null);
+  const [assignments, setAssignments] = useState({});
+  const [mentors, setMentors] = useState(null);
   const [outcomes, setOutcomes] = useState({});
   const [programmeClosed, setProgrammeClosed] = useState(false);
   const [reactivatedMentors, setReactivatedMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const [compData, mentorData] = await Promise.all([fetchCompanies(), fetchMentors()]);
       const compList = compData.companies;
@@ -196,7 +199,9 @@ export default function App() {
       });
       setAssignments(initAssignments);
     } catch (err) {
-      console.warn("API unavailable, using static data:", err.message);
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -266,9 +271,26 @@ export default function App() {
         <main className="flex-1 min-w-0 flex flex-col">
           <TopBar screenKey={route} dark={dark} onToggleDark={() => setDark(d => !d)} />
           <div className="px-8 pb-12 flex-1" style={{ background: "var(--nx-surface)" }}>
-            <div key={route} className="nx-fade-in">
-              {renderScreen()}
-            </div>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-64 gap-3">
+                <RefreshCw size={24} className="animate-spin" style={{ color: "var(--nx-text-3)" }} />
+                <span className="text-[13px]" style={{ color: "var(--nx-text-3)" }}>Loading data…</span>
+              </div>
+            ) : loadError ? (
+              <div className="flex flex-col items-center justify-center h-64 gap-3">
+                <div className="text-[13px] font-medium" style={{ color: "var(--nx-text)" }}>Failed to load data</div>
+                <div className="text-[12px] mono" style={{ color: "var(--nx-text-3)" }}>{loadError}</div>
+                <button onClick={loadData}
+                        className="mt-2 px-4 py-1.5 rounded-md text-[13px] font-medium"
+                        style={{ background: "#185FA5", color: "#fff" }}>
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <div key={route} className="nx-fade-in">
+                {renderScreen()}
+              </div>
+            )}
           </div>
         </main>
       </div>
