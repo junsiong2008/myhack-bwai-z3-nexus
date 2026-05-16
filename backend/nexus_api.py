@@ -562,16 +562,23 @@ def get_graph(programme_id: str, limit: int = 20):
                   "type": "programme", "size": 30})
     companies = list(COMPANIES.values())[:limit]
     used_mentors = set()
+    mentor_by_name = {m['name']: m for m in MENTORS.values()}
     for c in companies:
         nodes.append({"id":c['id'], "label":c['name'], "type":"company",
                       "sector":c['sector'], "stage":c['stage'], "size":12})
         edges.append({"source":programme_id, "target":c['id'], "type":"enrolled", "weight":0.5})
-        results = []
-        for m in MENTORS.values():
-            prob = float(MODEL.predict_proba(pd.DataFrame([build_features(c, m)]))[0][1])
-            results.append((m, prob))
-        results.sort(key=lambda x: -x[1])
-        top_mentor, score = results[0]
+        # Use the stored assignment from the pipeline if available, otherwise run AI model
+        assigned_name = COMPANY_MENTOR.get(c['id'])
+        top_mentor = mentor_by_name.get(assigned_name) if assigned_name else None
+        if top_mentor:
+            score = float(MODEL.predict_proba(pd.DataFrame([build_features(c, top_mentor)]))[0][1])
+        else:
+            results = []
+            for m in MENTORS.values():
+                prob = float(MODEL.predict_proba(pd.DataFrame([build_features(c, m)]))[0][1])
+                results.append((m, prob))
+            results.sort(key=lambda x: -x[1])
+            top_mentor, score = results[0]
         if top_mentor['id'] not in used_mentors:
             used_mentors.add(top_mentor['id'])
             nodes.append({"id":top_mentor['id'], "label":top_mentor['name'],
