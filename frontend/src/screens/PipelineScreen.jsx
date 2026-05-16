@@ -209,16 +209,18 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
             })}
           </div>
 
-          <button onClick={handleBulkAssign} disabled={bulkRunning}
-                  className="nx-btn-primary flex items-center gap-2" style={{ width: "auto" }}>
-            {bulkRunning ? <><Loader size={14}/> Assigning… {bulkProgress}%</> : <><Zap size={14}/> Bulk AI-assign</>}
-          </button>
-          {!ecosystem.programmeClosed && (
-            <button onClick={() => setCloseModalOpen(true)}
-                    className="nx-btn-outline flex items-center gap-2" style={{ width: "auto", borderColor: "#185FA5", color: "#185FA5" }}>
-              <Check size={14}/> Close programme
+          <div className="ml-auto flex items-center gap-3">
+            <button onClick={handleBulkAssign} disabled={bulkRunning}
+                    className="nx-btn-primary flex items-center gap-2" style={{ width: "auto" }}>
+              {bulkRunning ? <><Loader size={14}/> Assigning… {bulkProgress}%</> : <><Zap size={14}/> Bulk AI-assign</>}
             </button>
-          )}
+            {!ecosystem.programmeClosed && (
+              <button onClick={() => setCloseModalOpen(true)}
+                      className="nx-btn-outline flex items-center gap-2" style={{ width: "auto", borderColor: "#185FA5", color: "#185FA5" }}>
+                <Check size={14}/> Close programme
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="mt-3 flex items-center gap-4">
