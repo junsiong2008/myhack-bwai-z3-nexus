@@ -40,8 +40,8 @@ except Exception:
 # Set env:  export GEMINI_API_KEY="your_key_here"
 # Or pass directly to run_intake_agent(api_key="...")
 
-GEMINI_MODEL  = "gemini-2.0-flash"   # Fast + cheap — ideal for hackathon
-FALLBACK_MODEL = "gemini-1.5-flash"  # Fallback if 2.0 unavailable on your key
+GEMINI_MODEL  = "gemini-3.1-flash-lite"   # Fast + cheap — ideal for hackathon
+FALLBACK_MODEL = "gemini-2.5-flash"  # Fallback if 2.0 unavailable on your key
 
 SECTORS = ["Fintech","Healthtech","Edtech","Agritech","Cleantech",
            "Logistics","E-commerce","Cybersecurity","AI/ML","IoT","General"]

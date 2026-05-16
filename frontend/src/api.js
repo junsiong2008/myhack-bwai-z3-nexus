@@ -86,7 +86,7 @@ export function adaptIntakeResult(extraction, company) {
     problem_statement: extraction.problem_statement || company?.pitch_summary || "",
     key_strength: extraction.key_strength || `Domain-experienced team building in ${sector?.toLowerCase() || "tech"}.`,
     risk_flag: extraction.risk_flag || null,
-    match_readiness: extraction.match_readiness || 65,
+    match_readiness: extraction.match_readiness != null ? Math.round(extraction.match_readiness * 100) : 65,
     priority_tier: extraction.priority || extraction.priority_tier || "Standard",
     confidence,
   };

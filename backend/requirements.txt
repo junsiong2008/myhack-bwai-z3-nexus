@@ -1,9 +1,12 @@
 fastapi==0.111.0
 uvicorn==0.30.0
-pydantic==2.7.1
+pydantic==2.10.6
 xgboost==2.0.3
 scikit-learn==1.4.2
 pandas==2.2.2
 numpy==1.26.4
 faker==24.0.0
 python-multipart==0.0.9
+google-genai==2.3.0
+langgraph==1.2.0
+python-dotenv

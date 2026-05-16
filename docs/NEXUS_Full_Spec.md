@@ -87,7 +87,7 @@ For Cloud Run deployment, replace `VITE_API_BASE_URL` with the Cloud Run service
 
 ```
 GEMINI_API_KEY=your_key_here
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-3.1-flash-lite
 GOOGLE_CLOUD_PROJECT=nexus-hack-2026
 FIRESTORE_DATABASE=(default)
 GCS_BUCKET=nexus-pitch-decks
@@ -523,7 +523,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
 INTAKE_PROMPT = """
 You are an ecosystem analyst for a startup accelerator.

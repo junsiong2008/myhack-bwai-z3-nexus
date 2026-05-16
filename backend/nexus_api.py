@@ -356,16 +356,18 @@ async def smart_intake(req: IntakeRequest):
                 founding_year=req.founding_year
             )
             extraction_meta = {
-                "sector":     entity.get("sector"),
-                "stage":      entity.get("stage"),
-                "geography":  entity.get("geography"),
-                "needs":      entity.get("needs"),
-                "confidence": entity.get("extraction_confidence"),
-                "priority":   entity.get("priority_tier"),
-                "key_strength": entity.get("key_strength"),
-                "risk_flag":  entity.get("risk_flag"),
-                "parsed_by":  entity.get("parsed_by"),
-                "tokens_used": entity.get("tokens_used", 0),
+                "sector":          entity.get("sector"),
+                "stage":           entity.get("stage"),
+                "geography":       entity.get("geography"),
+                "needs":           entity.get("needs"),
+                "confidence":      entity.get("extraction_confidence"),
+                "priority":        entity.get("priority_tier"),
+                "key_strength":    entity.get("key_strength"),
+                "risk_flag":       entity.get("risk_flag"),
+                "match_readiness": entity.get("match_readiness"),
+                "problem_statement": entity.get("problem_statement"),
+                "parsed_by":       entity.get("parsed_by"),
+                "tokens_used":     entity.get("tokens_used", 0),
             }
         except Exception as e:
             # Graceful fallback — demo never breaks
