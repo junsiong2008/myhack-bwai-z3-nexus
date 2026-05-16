@@ -27,8 +27,8 @@ GEO_IDX = {g: i for i, g in enumerate(GEOS)}
 random.seed(42)
 np.random.seed(42)
 
-BASE = os.path.dirname(__file__)
-MOCK = os.path.join(BASE, 'mock')
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
+MOCK = os.path.join(BASE, 'data', 'mock')
 
 
 def weighted_geo():
@@ -199,7 +199,7 @@ def save_dataset(companies, mentors, programmes, matches, model, feature_cols):
         'geo_idx': GEO_IDX,
         'feature_cols': feature_cols,
     }
-    with open(os.path.join(BASE, 'nexus_matching_model.pkl'), 'wb') as f:
+    with open(os.path.join(BASE, 'data', 'nexus_matching_model.pkl'), 'wb') as f:
         pickle.dump(bundle, f)
 
 

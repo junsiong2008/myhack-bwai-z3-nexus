@@ -8,9 +8,9 @@ from itertools import product
 rng = random.Random(2026)
 
 # ── Load model bundle for index mappings ───────────────────────────────────────
-BASE = os.path.dirname(__file__)
-MOCK = os.path.join(BASE, 'mock')
-with open(f'{BASE}/nexus_matching_model.pkl', 'rb') as f:
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
+MOCK = os.path.join(BASE, 'data', 'mock')
+with open(os.path.join(BASE, 'data', 'nexus_matching_model.pkl'), 'rb') as f:
     bundle = pickle.load(f)
 SECTOR_IDX = bundle['sector_idx']
 STAGE_IDX  = bundle['stage_idx']

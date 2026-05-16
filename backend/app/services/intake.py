@@ -6,7 +6,7 @@ MyHack 2026 | GDG KL | Cradle Fund
 Pipeline:
   raw pitch text / PDF
        ↓
-  [Node 1] Gemini 2.0 Flash — extract structured entity
+  [Node 1] Gemini 3.1 Flash Lite — extract structured entity
        ↓
   [Node 2] Validator — check completeness, fill gaps
        ↓

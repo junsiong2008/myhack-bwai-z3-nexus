@@ -15,8 +15,8 @@ from xgboost import XGBClassifier
 rng = random.Random(2026)
 np.random.seed(2026)
 
-BASE = os.path.dirname(__file__)
-MOCK = os.path.join(BASE, 'mock')
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
+MOCK = os.path.join(BASE, 'data', 'mock')
 
 with open(f'{MOCK}/companies.json') as f:
     companies = json.load(f)
@@ -139,7 +139,7 @@ bundle = {
     'geo_idx':    GEO_IDX,
     'feature_cols': FEATURES,
 }
-with open(f'{BASE}/nexus_matching_model.pkl', 'wb') as f:
+with open(os.path.join(BASE, 'data', 'nexus_matching_model.pkl'), 'wb') as f:
     pickle.dump(bundle, f)
 print("Saved nexus_matching_model.pkl")
 
