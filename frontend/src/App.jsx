@@ -54,9 +54,30 @@ const NexusLogo = ({ size = 28 }) => (
   </div>
 );
 
+function MobileBottomNav({ active, onNavigate }) {
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t flex"
+         style={{ background: "var(--nx-sidebar)", borderColor: "var(--nx-border)" }}>
+      {NAV_ITEMS.map(item => {
+        const isActive = active === item.key;
+        const IconC = item.icon;
+        const shortLabel = item.label.split(" ")[0];
+        return (
+          <button key={item.key} onClick={() => onNavigate(item.key)}
+                  className="flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition"
+                  style={{ color: isActive ? "#185FA5" : "var(--nx-text-3)" }}>
+            <IconC size={18} />
+            <span className="text-[9px] font-medium leading-tight">{shortLabel}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
 function Sidebar({ active, onNavigate }) {
   return (
-    <aside className="w-[220px] shrink-0 border-r flex flex-col"
+    <aside className="hidden md:flex w-[220px] shrink-0 border-r flex-col"
            style={{ background: "var(--nx-sidebar)", borderColor: "var(--nx-border)" }}>
       <div className="px-5 pt-5 pb-6">
         <NexusLogo />
@@ -104,7 +125,24 @@ function TopBar({ screenKey, dark, onToggleDark }) {
   const meta = SCREEN_META[screenKey];
   return (
     <div className="sticky top-0 z-20 bg-[var(--nx-surface)] border-b" style={{ borderColor: "var(--nx-border)" }}>
-      <div className="px-8 py-3 flex items-center gap-4">
+      {/* Mobile header */}
+      <div className="flex md:hidden items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "var(--nx-border-soft)" }}>
+        <NexusLogo size={24} />
+        <div className="flex-1" />
+        <button className="relative" style={{ color: "var(--nx-text-2)" }}>
+          <Bell size={16} />
+          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: "#E24B4A" }} />
+        </button>
+        <button onClick={onToggleDark}
+                className="p-1.5 rounded-md transition"
+                style={{ color: "var(--nx-text-2)", background: "transparent" }}
+                title={dark ? "Switch to light mode" : "Switch to dark mode"}>
+          {dark ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+      </div>
+
+      {/* Desktop header */}
+      <div className="hidden md:flex px-8 py-3 items-center gap-4">
         <div className="flex items-center gap-3">
           <span className="text-[11px] uppercase tracking-wider font-medium" style={{ color: "var(--nx-text-3)" }}>Programme</span>
           <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border text-[13px] font-semibold"
@@ -144,13 +182,11 @@ function TopBar({ screenKey, dark, onToggleDark }) {
           </div>
         </div>
       </div>
-      <div className="px-8 pt-5 pb-5">
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <h1 className="text-[26px] font-semibold tracking-tight leading-tight">{meta.title}</h1>
-            <p className="text-[14px] mt-1" style={{ color: "var(--nx-text-2)" }}>{meta.sub}</p>
-          </div>
-        </div>
+
+      {/* Screen title */}
+      <div className="px-4 md:px-8 pt-4 pb-4 md:pt-5 md:pb-5">
+        <h1 className="text-[20px] md:text-[26px] font-semibold tracking-tight leading-tight">{meta.title}</h1>
+        <p className="text-[13px] md:text-[14px] mt-1 hidden sm:block" style={{ color: "var(--nx-text-2)" }}>{meta.sub}</p>
       </div>
     </div>
   );
@@ -275,7 +311,7 @@ export default function App() {
         <Sidebar active={route} onNavigate={navigate} />
         <main className="flex-1 min-w-0 flex flex-col">
           <TopBar screenKey={route} dark={dark} onToggleDark={() => setDark(d => !d)} />
-          <div className="px-8 pb-12 flex-1" style={{ background: "var(--nx-surface)" }}>
+          <div className="px-4 md:px-8 pt-6 pb-24 md:pb-12 flex-1" style={{ background: "var(--nx-surface)" }}>
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-3">
                 <RefreshCw size={24} className="animate-spin" style={{ color: "var(--nx-text-3)" }} />
@@ -299,6 +335,7 @@ export default function App() {
           </div>
         </main>
       </div>
+      <MobileBottomNav active={route} onNavigate={navigate} />
     </ToastProvider>
   );
 }

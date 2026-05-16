@@ -209,7 +209,7 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
             })}
           </div>
 
-          <div className="ml-auto flex items-center gap-3">
+          <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-3 flex-wrap">
             <button onClick={handleBulkAssign} disabled={bulkRunning}
                     className="nx-btn-primary flex items-center gap-2" style={{ width: "auto" }}>
               {bulkRunning ? <><Loader size={14}/> Assigning… {bulkProgress}%</> : <><Zap size={14}/> Bulk AI-assign</>}
@@ -238,8 +238,8 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
         {bulkResult && !bulkRunning && <BulkResultPanel result={bulkResult} onDismiss={() => setBulkResult(null)} />}
       </div>
 
-      <div className="nx-card overflow-hidden">
-        <table className="w-full text-[13px]">
+      <div className="nx-card overflow-hidden overflow-x-auto">
+        <table className="w-full text-[13px] min-w-[700px]">
           <thead>
             <tr className="text-left" style={{ background: "var(--nx-card-subtle)", borderBottom: "1px solid var(--nx-border)" }}>
               <th className="px-4 py-3 text-[11px] uppercase tracking-wide font-medium text-[var(--nx-text-2)]">Company</th>

@@ -125,7 +125,7 @@ export default function FlywheelScreen() {
         <FlywheelChart data={data} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className="nx-card p-6" style={{ background: "var(--nx-danger-50)", borderColor: "rgba(226,75,74,0.3)" }}>
           <div className="text-[11px] uppercase tracking-wide font-semibold mb-3" style={{ color: "var(--nx-danger)" }}>
             Today — without NEXUS
@@ -166,7 +166,7 @@ export default function FlywheelScreen() {
       </div>
 
       <div className="nx-card p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
             <div className="text-[11px] uppercase tracking-wider font-medium mb-1" style={{ color: "var(--nx-primary)" }}>Leadership reporting</div>
             <h3 className="text-[16px] font-semibold tracking-tight">CREST 2026 MY · attributable impact</h3>
@@ -179,14 +179,14 @@ export default function FlywheelScreen() {
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           <LeadStat label="Startups graduated" value="24" sub="of 30 in cohort · 80% completion" color="#1D9E75" />
           <LeadStat label="Match accuracy" value="87%" sub="↑ 8 pts vs Cohort 3" color="#185FA5" trend />
           <LeadStat label="Outcome data captured" value="100%" sub="30 / 30 edges labelled" color="#1D9E75" />
           <LeadStat label="Annual ops savings" value="MYR 102,880" sub="Across 4 programmes / year" color="#BA7517" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="rounded-lg border p-4" style={{ borderColor: "var(--nx-border-soft)", background: "var(--nx-card-subtle)" }}>
             <div className="text-[11px] uppercase tracking-wide font-medium text-[var(--nx-text-2)] mb-2">Year-on-year programme quality</div>
             <div className="space-y-2 text-[12.5px]">

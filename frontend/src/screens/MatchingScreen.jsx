@@ -137,7 +137,7 @@ export default function MatchingScreen({ navigate, ecosystem, addAssignment, pre
   const handleSkip = (m) => setSkipped(s => ({ ...s, [m.mentor_id]: true }));
 
   return (
-    <div className="grid grid-cols-[420px_1fr] gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6">
       {/* LEFT */}
       <div>
         <div className="nx-card p-6">

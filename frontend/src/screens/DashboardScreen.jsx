@@ -52,8 +52,8 @@ const SectorDonut = ({ data }) => {
   const r = 78, stroke = 22, cx = 110, cy = 110, C = 2 * Math.PI * r;
   let offset = 0;
   return (
-    <div className="flex items-center gap-6">
-      <svg width="220" height="220" viewBox="0 0 220 220">
+    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+      <svg width="180" height="180" viewBox="0 0 220 220" className="shrink-0">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F3F1EC" strokeWidth={stroke} />
         {data.map((d, i) => {
           const frac = d.value / total;
@@ -129,7 +129,7 @@ export default function DashboardScreen({ ecosystem, navigate }) {
 
   return (
     <div>
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <KPICard label="Companies" value={stats ? String(stats.total_companies) : String(ecosystem.companies.length)} sublabel="Active in ecosystem" Icon={Building2} />
         <KPICard label="Mentors" value={stats ? String(stats.total_mentors) : String(ecosystem.mentors.length)} sublabel={stats ? `${stats.reusable_mentors} reuse-eligible` : "Loading…"} Icon={Users} />
         <KPICard label="Match success rate" value={stats ? `${stats.match_success_rate}%` : "—"} sublabel={stats ? `${stats.successful_matches} of ${stats.total_historical_matches} pairings` : "Loading…"} Icon={TrendingUp} trend />
@@ -137,7 +137,7 @@ export default function DashboardScreen({ ecosystem, navigate }) {
           tooltip={`Estimated at 2.5 hrs per company: ~1.7 hrs reviewing 20 mentor profiles manually (5 min each) + 30 min email & calendar coordination + 20 min admin. Across ${stats ? stats.total_companies : "all"} companies processed.`} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <ChartCard title="Sector breakdown" subtitle="Active companies across CREST 2026 MY">
           <SectorDonut data={stats
             ? Object.entries(stats.sector_distribution).slice(0, 6).map(([name, value], i) => ({
@@ -161,7 +161,7 @@ export default function DashboardScreen({ ecosystem, navigate }) {
           </div>
           <span className="text-[11px] mono px-2 py-1 rounded" style={{ background: "var(--nx-success-50)", color: "#1D9E75" }}>● Live</span>
         </div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <ModelStat label="ROC-AUC" value={stats ? stats.model_auc.toFixed(4) : "—"} color="#185FA5" />
           <ModelStat label="Precision" value={stats ? `${stats.model_precision}%` : "—"} color="#1D9E75" />
           <ModelStat label="Recall" value={stats ? `${stats.model_recall}%` : "—"} color="#1D9E75" />
@@ -177,7 +177,7 @@ export default function DashboardScreen({ ecosystem, navigate }) {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4">
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <MiniStat
           title="Mentor NPS (avg)"
           value={stats ? `${stats.avg_mentor_nps} ★` : "—"}

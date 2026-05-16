@@ -75,7 +75,7 @@ export default function IntakeScreen({ navigate, ecosystem, addCompany }) {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-6 max-w-[1200px]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1200px]">
       {/* LEFT */}
       <div>
         <div className="nx-card p-6">
@@ -98,7 +98,7 @@ export default function IntakeScreen({ navigate, ecosystem, addCompany }) {
             style={{ height: 200, lineHeight: 1.5 }}
           />
 
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
             <div>
               <label className="text-[11px] font-medium uppercase tracking-wide text-[var(--nx-text-2)]">Company name</label>
               <input className="nx-input mt-1" placeholder="Optional"
