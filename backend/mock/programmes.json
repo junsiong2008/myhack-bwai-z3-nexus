@@ -1,0 +1,42 @@
+[
+  {
+    "id": "P2022",
+    "name": "CREST 2022 Cohort",
+    "year": 2022,
+    "status": "completed",
+    "cohort_size": 45,
+    "focus": "Healthtech"
+  },
+  {
+    "id": "P2023",
+    "name": "CREST 2023 Cohort",
+    "year": 2023,
+    "status": "completed",
+    "cohort_size": 45,
+    "focus": "Fintech"
+  },
+  {
+    "id": "P2024",
+    "name": "CREST 2024 Cohort",
+    "year": 2024,
+    "status": "active",
+    "cohort_size": 60,
+    "focus": "Cleantech"
+  },
+  {
+    "id": "P2025",
+    "name": "CREST 2025 Cohort",
+    "year": 2025,
+    "status": "active",
+    "cohort_size": 60,
+    "focus": "AI/ML"
+  },
+  {
+    "id": "P2026",
+    "name": "CREST 2026 Cohort",
+    "year": 2026,
+    "status": "active",
+    "cohort_size": 60,
+    "focus": "Healthtech"
+  }
+]
