@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { KPICard, SectorBadge, Avatar } from '../components';
 import { Building2, Users, TrendingUp, Clock, AlertTriangle, ArrowRight } from '../icons';
-import { MENTORS, SECTOR_DISTRIBUTION, STAGE_DISTRIBUTION, computeEngagement } from '../data';
+import { SECTOR_DISTRIBUTION, STAGE_DISTRIBUTION, computeEngagement } from '../data';
+import { fetchStats } from '../api';
 
 const ChartCard = ({ title, subtitle, children }) => (
   <div className="nx-card p-6">
@@ -121,6 +122,11 @@ const StageBars = ({ data }) => {
 
 export default function DashboardScreen({ ecosystem, navigate }) {
   const matched = Object.keys(ecosystem.assignments).length;
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    fetchStats().then(setStats).catch(console.error);
+  }, []);
 
   const atRisk = useMemo(() => {
     return Object.entries(ecosystem.assignments).map(([cid, mid]) => {
@@ -128,7 +134,7 @@ export default function DashboardScreen({ ecosystem, navigate }) {
       if (!c) return null;
       const eng = computeEngagement(c, mid);
       if (!eng.atRisk) return null;
-      const mentor = MENTORS.find(m => m.id === mid);
+      const mentor = ecosystem.mentors.find(m => m.id === mid);
       return { company: c, mentor, eng };
     }).filter(Boolean);
   }, [ecosystem]);
@@ -176,18 +182,25 @@ export default function DashboardScreen({ ecosystem, navigate }) {
       )}
 
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <KPICard label="Companies" value="300" sublabel="Active in ecosystem" Icon={Building2} />
-        <KPICard label="Mentors" value="80" sublabel="62 reuse-eligible" Icon={Users} />
-        <KPICard label="Match success rate" value="64.2%" sublabel="from 38% (manual)" Icon={TrendingUp} trend />
-        <KPICard label="Ops hours saved" value="~45h" sublabel="This cohort alone" Icon={Clock} />
+        <KPICard label="Companies" value={stats ? String(stats.total_companies) : String(ecosystem.companies.length)} sublabel="Active in ecosystem" Icon={Building2} />
+        <KPICard label="Mentors" value={stats ? String(stats.total_mentors) : String(ecosystem.mentors.length)} sublabel={stats ? `${stats.reusable_mentors} reuse-eligible` : "Loading…"} Icon={Users} />
+        <KPICard label="Match success rate" value={stats ? `${stats.match_success_rate}%` : "—"} sublabel={stats ? `${stats.successful_matches} of ${stats.total_historical_matches} pairings` : "Loading…"} Icon={TrendingUp} trend />
+        <KPICard label="Ops hours saved" value={stats ? `~${stats.ops_hours_saved}h` : "—"} sublabel="This cohort alone" Icon={Clock} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <ChartCard title="Sector breakdown" subtitle="Active companies across CREST 2026 MY">
-          <SectorDonut data={SECTOR_DISTRIBUTION} />
+          <SectorDonut data={stats
+            ? Object.entries(stats.sector_distribution).slice(0, 6).map(([name, value], i) => ({
+                name, value,
+                color: ["#185FA5","#1D9E75","#3CAEC0","#BA7517","#7A4FB0","#9C9B96"][i % 6],
+              }))
+            : SECTOR_DISTRIBUTION} />
         </ChartCard>
         <ChartCard title="Stage distribution" subtitle="Funding maturity across the cohort">
-          <StageBars data={STAGE_DISTRIBUTION} />
+          <StageBars data={stats
+            ? Object.entries(stats.stage_distribution).map(([name, value]) => ({ name, value }))
+            : STAGE_DISTRIBUTION} />
         </ChartCard>
       </div>
 
@@ -195,15 +208,15 @@ export default function DashboardScreen({ ecosystem, navigate }) {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h3 className="text-[16px] font-semibold tracking-tight">Model performance</h3>
-            <p className="text-[12.5px] text-[var(--nx-text-2)] mt-0.5">XGBoost match classifier · last trained on 268 historical pairings</p>
+            <p className="text-[12.5px] text-[var(--nx-text-2)] mt-0.5">XGBoost match classifier · last trained on {stats ? stats.data_points_captured : "—"} data points</p>
           </div>
           <span className="text-[11px] mono px-2 py-1 rounded" style={{ background: "var(--nx-success-50)", color: "#1D9E75" }}>● Live</span>
         </div>
         <div className="grid grid-cols-4 gap-4">
-          <ModelStat label="ROC-AUC" value="0.8722" color="#185FA5" />
+          <ModelStat label="ROC-AUC" value={stats ? stats.model_auc.toFixed(4) : "0.8169"} color="#185FA5" />
           <ModelStat label="Precision" value="82%" color="#1D9E75" />
           <ModelStat label="Recall" value="77%" color="#1D9E75" />
-          <ModelStat label="Training records" value="268" color="#6B6A65" />
+          <ModelStat label="Data points" value={stats ? String(stats.data_points_captured) : "—"} color="#6B6A65" />
         </div>
         <div className="mt-5 pt-5 border-t" style={{ borderColor: "var(--nx-border-soft)" }}>
           <div className="text-[11px] uppercase tracking-wide font-medium text-[var(--nx-text-2)] mb-2">Top signals</div>

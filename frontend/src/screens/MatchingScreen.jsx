@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useToast, SectorBadge, StageBadge, GeoBadge, StatusBadge, Avatar, MatchScoreBar, CapacityBar, EmptyState } from '../components';
 import { Zap, Loader, ChevronDown, AlertTriangle, Check, Star, RefreshCw } from '../icons';
-import { fakeMatch, MENTORS } from '../data';
+import { fakeMatch } from '../data';
+import { runMatch } from '../api';
 
 function MentorCard({ mentor, rank, approved, skipped, onApprove, onSkip }) {
   return (
@@ -81,26 +82,38 @@ export default function MatchingScreen({ navigate, ecosystem, addAssignment, pre
   const [selectedId, setSelectedId] = useState(null);
   const [matching, setMatching] = useState(false);
   const [results, setResults] = useState(null);
+  const [totalEvaluated, setTotalEvaluated] = useState(null);
   const [approved, setApproved] = useState({});
   const [skipped, setSkipped] = useState({});
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const runMatchFor = (companyId) => {
+  const runMatchFor = async (companyId) => {
     const c = ecosystem.companies.find(x => x.id === companyId);
     if (!c) return;
     setMatching(true);
     setResults(null);
     setApproved({});
     setSkipped({});
-    setTimeout(() => {
+    try {
+      const data = await runMatch(companyId, 3);
+      setResults(data.top_matches);
+      setTotalEvaluated(data.total_evaluated);
+    } catch (err) {
+      console.warn("Match API unavailable, using fallback:", err.message);
       setResults(fakeMatch(c, 3));
+      setTotalEvaluated(null);
+    } finally {
       setMatching(false);
-    }, 1600);
+    }
   };
 
   useEffect(() => {
-    if (preselect && preselect.companyName) {
-      const c = ecosystem.companies.find(x => x.name === preselect.companyName);
+    if (preselect) {
+      const id = preselect.companyId;
+      const name = preselect.companyName;
+      const c = id
+        ? ecosystem.companies.find(x => x.id === id)
+        : ecosystem.companies.find(x => x.name === name);
       if (c) {
         setSelectedId(c.id);
         setTimeout(() => runMatchFor(c.id), 400);
@@ -205,7 +218,7 @@ export default function MatchingScreen({ navigate, ecosystem, addAssignment, pre
             <h2 className="text-[18px] font-semibold tracking-tight">Match results</h2>
             {results && (
               <span className="text-[12px] text-[var(--nx-text-2)]">
-                <span className="mono">XGBoost v0.8722</span> · top {results.length} of {MENTORS.length} mentors
+                <span className="mono">XGBoost · AUC 0.8169</span> · top {results.length}{totalEvaluated ? ` of ${totalEvaluated}` : ""} mentors
               </span>
             )}
           </div>

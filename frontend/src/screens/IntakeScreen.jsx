@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useToast, SectorBadge, GeoBadge, PriorityBadge, MatchScoreBar, EmptyState } from '../components';
 import { Sparkles, Loader, Brain, FormInput, AlertTriangle, Check, Plus, ArrowRight } from '../icons';
 import { fakeGeminiParse, SAMPLE_PITCH } from '../data';
+import { runIntake, adaptIntakeResult, adaptCompany } from '../api';
 
 export default function IntakeScreen({ navigate, ecosystem, addCompany }) {
   const toast = useToast();
@@ -12,30 +13,48 @@ export default function IntakeScreen({ navigate, ecosystem, addCompany }) {
   const [parsing, setParsing] = useState(false);
   const [result, setResult] = useState(null);
   const [added, setAdded] = useState(false);
+  const [intakeCompanyId, setIntakeCompanyId] = useState(null);
+  const [intakeCompany, setIntakeCompany] = useState(null);
 
-  const handleParse = () => {
+  const handleParse = async () => {
     if (!pitch.trim()) return;
     setParsing(true);
     setResult(null);
     setAdded(false);
-    setTimeout(() => {
-      const r = fakeGeminiParse(pitch);
-      setResult(r);
+    setIntakeCompanyId(null);
+    setIntakeCompany(null);
+    try {
+      const data = await runIntake({
+        company_name: companyName.trim() || "New Applicant",
+        pitch_text: pitch,
+        team_size: teamSize ? Number(teamSize) : undefined,
+        founding_year: foundedYear ? Number(foundedYear) : undefined,
+      });
+      setResult(adaptIntakeResult(data.extraction, data.company));
+      setIntakeCompanyId(data.company_id);
+      setIntakeCompany(data.company);
+    } catch (err) {
+      console.warn("Intake API unavailable, using fallback:", err.message);
+      setResult(fakeGeminiParse(pitch));
+      toast.push("Using local fallback (API unavailable)", "warning");
+    } finally {
       setParsing(false);
-    }, 1800);
+    }
   };
 
   const handleAdd = () => {
-    const newCompany = {
-      id: "C_" + String(900 + Math.floor(Math.random() * 99)),
-      name: companyName.trim() || "New Applicant",
-      sector: result.sector, stage: result.stage, geo: result.geography,
-      status: "Applied", needs: result.needs,
-      risk_flag: result.risk_flag, problem: result.problem_statement,
-      strength: result.key_strength, match_readiness: result.match_readiness,
-      priority: result.priority_tier,
-      team_size: Number(teamSize) || 3, founded: Number(foundedYear) || 2025,
-    };
+    const newCompany = intakeCompany
+      ? adaptCompany({ ...intakeCompany, pipeline_status: "Applied" })
+      : {
+          id: "C_" + String(900 + Math.floor(Math.random() * 99)),
+          name: companyName.trim() || "New Applicant",
+          sector: result.sector, stage: result.stage, geo: result.geography,
+          status: "Applied", needs: result.needs,
+          risk_flag: result.risk_flag, problem: result.problem_statement,
+          strength: result.key_strength, match_readiness: result.match_readiness,
+          priority: result.priority_tier,
+          team_size: Number(teamSize) || 3, founded: Number(foundedYear) || 2025,
+        };
     addCompany(newCompany);
     setAdded(true);
     toast.push(`${newCompany.name} added to ecosystem`, "success");
@@ -43,7 +62,9 @@ export default function IntakeScreen({ navigate, ecosystem, addCompany }) {
 
   const handleRunMatch = () => {
     if (!added) handleAdd();
-    setTimeout(() => navigate("matching", { companyName: companyName.trim() || "New Applicant" }), 250);
+    const name = intakeCompany?.name || companyName.trim() || "New Applicant";
+    const id = intakeCompanyId || null;
+    setTimeout(() => navigate("matching", { companyName: name, companyId: id }), 250);
   };
 
   const useSample = () => {
@@ -105,7 +126,7 @@ export default function IntakeScreen({ navigate, ecosystem, addCompany }) {
 
           <div className="mt-4 flex items-start gap-2 text-[12px] text-[var(--nx-text-3)]">
             <Brain size={14} className="mt-px shrink-0" />
-            <span>Powered by Gemini 1.5 Pro · structured extraction with confidence scoring · ~2s avg latency</span>
+            <span>Powered by Gemini Flash · structured extraction with confidence scoring · FastAPI backend on :8000</span>
           </div>
         </div>
       </div>

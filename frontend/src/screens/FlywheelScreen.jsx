@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { RefreshCw, Check, ArrowRight, X } from '../icons';
+import { fetchStats } from '../api';
 
 const LeadStat = ({ label, value, sub, color, trend }) => (
   <div className="rounded-lg border p-4" style={{ borderColor: "var(--nx-border-soft)", background: "var(--nx-card-subtle)" }}>
@@ -69,13 +71,29 @@ const FlywheelChart = ({ data }) => {
   );
 };
 
+const STATIC_DATA = [
+  { name: "Cohort 1", year: "2022 MY", accuracy: 61 },
+  { name: "Cohort 2", year: "2023 MY", accuracy: 71 },
+  { name: "Cohort 3", year: "2024 MY", accuracy: 80 },
+  { name: "Cohort 4", year: "2025 MY", accuracy: 87 },
+];
+
 export default function FlywheelScreen() {
-  const data = [
-    { name: "Cohort 1", year: "2023 MY", accuracy: 61 },
-    { name: "Cohort 2", year: "2024 MY", accuracy: 71 },
-    { name: "Cohort 3", year: "2025 MY", accuracy: 79 },
-    { name: "Cohort 4", year: "2026 MY", accuracy: 87 },
-  ];
+  const [data, setData] = useState(STATIC_DATA);
+
+  useEffect(() => {
+    fetchStats()
+      .then(stats => {
+        if (stats.cohort_accuracy_history?.length) {
+          setData(stats.cohort_accuracy_history.map((d, i) => ({
+            name: `Cohort ${i + 1}`,
+            year: d.cohort.replace("CREST ", ""),
+            accuracy: d.accuracy,
+          })));
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="max-w-[1080px] mx-auto">
@@ -99,7 +117,9 @@ export default function FlywheelScreen() {
           </div>
           <div className="text-right">
             <div className="text-[11px] uppercase tracking-wide text-[var(--nx-text-2)] font-medium">Delta vs Cohort 1</div>
-            <div className="text-[24px] font-semibold tabular-nums" style={{ color: "#1D9E75" }}>+26 pts</div>
+            <div className="text-[24px] font-semibold tabular-nums" style={{ color: "#1D9E75" }}>
+              +{data.length >= 2 ? data[data.length - 1].accuracy - data[0].accuracy : 0} pts
+            </div>
           </div>
         </div>
         <FlywheelChart data={data} />

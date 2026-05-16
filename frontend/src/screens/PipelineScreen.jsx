@@ -1,18 +1,22 @@
 import { useState, useMemo } from 'react';
 import { useToast, SectorBadge, StageBadge, GeoBadge, StatusBadge, Avatar, ProgressBar } from '../components';
 import { Zap, Loader, Search, ChevronDown, AlertTriangle, Check, RefreshCw, X } from '../icons';
-import { MENTORS, STATUSES, fakeMatch, computeEngagement } from '../data';
+import { STATUSES, fakeMatch, computeEngagement } from '../data';
+import { bulkAssign, runMatch, PROGRAMME_ID } from '../api';
 import CloseProgrammeModal from './CloseProgrammeModal';
 
-export default function PipelineScreen({ ecosystem, addAssignment, closeProgramme, activateReuseMentors, navigate }) {
+export default function PipelineScreen({ ecosystem, addAssignment, closeProgramme, activateReuseMentors, navigate, refreshData }) {
   const toast = useToast();
   const [statusFilters, setStatusFilters] = useState(new Set());
   const [search, setSearch] = useState("");
   const [openRowMenu, setOpenRowMenu] = useState(null);
+  const [rowSuggestions, setRowSuggestions] = useState(null);
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [reuseBannerDismissed, setReuseBannerDismissed] = useState(false);
+
+  const mentors = ecosystem.mentors || [];
 
   const reuseMentorSet = useMemo(() => {
     if (!ecosystem.programmeClosed) return new Set();
@@ -40,35 +44,67 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
     return true;
   });
 
-  const handleBulkAssign = () => {
-    const candidates = ecosystem.companies.filter(c => c.status === "Applied" && !ecosystem.assignments[c.id]);
-    if (candidates.length === 0) {
-      toast.push("No unmatched Applied companies", "warning");
-      return;
-    }
+  const handleBulkAssign = async () => {
     setBulkRunning(true);
-    setBulkProgress(0);
-    let i = 0;
-    const tick = () => {
-      if (i >= candidates.length) {
+    setBulkProgress(10);
+    try {
+      const data = await bulkAssign(PROGRAMME_ID);
+      setBulkProgress(60);
+      // Refresh companies from API to pick up new assignments and statuses
+      if (refreshData) await refreshData();
+      setBulkProgress(100);
+      toast.push(data.message || `${data.assigned_count} companies auto-assigned`, "success");
+    } catch (err) {
+      // Fallback: local fake bulk assign
+      console.warn("Bulk assign API failed, using fallback:", err.message);
+      const candidates = ecosystem.companies.filter(c => c.status === "Applied" && !ecosystem.assignments[c.id]);
+      if (candidates.length === 0) {
+        toast.push("No unmatched Applied companies", "warning");
         setBulkRunning(false);
-        toast.push(`${candidates.length} companies matched in 3.2 seconds. 14.6 hours saved.`, "success");
         return;
       }
-      const c = candidates[i];
-      const top = fakeMatch(c, 1)[0];
-      addAssignment(c.id, top.mentor_id, "Matched");
-      i++;
-      setBulkProgress(Math.round((i / candidates.length) * 100));
-      setTimeout(tick, 90);
-    };
-    setTimeout(tick, 250);
+      let i = 0;
+      const tick = () => {
+        if (i >= candidates.length) {
+          setBulkRunning(false);
+          toast.push(`${candidates.length} companies matched (local fallback)`, "success");
+          return;
+        }
+        const c = candidates[i];
+        const top = fakeMatch(c, 1)[0];
+        addAssignment(c.id, top.mentor_id, "Matched");
+        i++;
+        setBulkProgress(Math.round((i / candidates.length) * 100));
+        setTimeout(tick, 90);
+      };
+      setTimeout(tick, 250);
+      return;
+    }
+    setBulkRunning(false);
+  };
+
+  const handleOpenRowMenu = async (companyId) => {
+    if (openRowMenu === companyId) {
+      setOpenRowMenu(null);
+      setRowSuggestions(null);
+      return;
+    }
+    setOpenRowMenu(companyId);
+    setRowSuggestions(null);
+    try {
+      const data = await runMatch(companyId, 3);
+      setRowSuggestions({ companyId, matches: data.top_matches });
+    } catch {
+      const c = ecosystem.companies.find(x => x.id === companyId);
+      if (c) setRowSuggestions({ companyId, matches: fakeMatch(c, 3) });
+    }
   };
 
   const handleAssignRow = (company, mentorId) => {
-    const m = MENTORS.find(x => x.id === mentorId);
+    const m = mentors.find(x => x.id === mentorId);
     addAssignment(company.id, mentorId, "Matched");
     setOpenRowMenu(null);
+    setRowSuggestions(null);
     toast.push(`${company.name} assigned to ${m ? m.name : mentorId}`, "success");
   };
 
@@ -99,7 +135,7 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
           </div>
           <div className="flex -space-x-2 mr-2">
             {Array.from(reuseMentorSet).slice(0, 5).map(mid => {
-              const m = MENTORS.find(x => x.id === mid);
+              const m = mentors.find(x => x.id === mid);
               if (!m) return null;
               return <div key={mid} className="ring-2 ring-white rounded-full"><Avatar name={m.name} size={28} /></div>;
             })}
@@ -198,8 +234,10 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
           <tbody>
             {filtered.map((c, idx) => {
               const mentorId = ecosystem.assignments[c.id];
-              const mentor = mentorId ? MENTORS.find(m => m.id === mentorId) : null;
-              const suggestions = openRowMenu === c.id ? fakeMatch(c, 3) : null;
+              const mentor = mentorId ? mentors.find(m => m.id === mentorId) : null;
+              const suggestions = (openRowMenu === c.id && rowSuggestions?.companyId === c.id)
+                ? rowSuggestions.matches
+                : null;
               const eng = computeEngagement(c, mentorId);
               const outcome = ecosystem.outcomes[c.id];
               return (
@@ -251,7 +289,7 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
                     )}
                   </td>
                   <td className="px-3 py-3 text-right pr-4 relative">
-                    <button onClick={() => setOpenRowMenu(openRowMenu === c.id ? null : c.id)}
+                    <button onClick={() => handleOpenRowMenu(c.id)}
                             className="text-[12px] font-medium px-2.5 py-1 rounded-md border hover:bg-[#F3F1EC]"
                             style={{ borderColor: "var(--nx-border)", color: "var(--nx-text)", background: "var(--nx-card)" }}>
                       {mentor ? "Reassign" : "Assign"}

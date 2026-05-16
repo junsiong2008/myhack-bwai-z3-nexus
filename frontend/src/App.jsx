@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ToastProvider } from './components';
 import { LayoutGrid, Workflow, Zap, FormInput, Share2, RefreshCw, Search, Bell, ChevronDown, Moon, Sun } from './icons';
 import DashboardScreen from './screens/DashboardScreen';
@@ -7,7 +7,8 @@ import MatchingScreen from './screens/MatchingScreen';
 import PipelineScreen from './screens/PipelineScreen';
 import GraphScreen from './screens/GraphScreen';
 import FlywheelScreen from './screens/FlywheelScreen';
-import { COMPANIES, DEFAULT_ASSIGNMENTS } from './data';
+import { COMPANIES, MENTORS, DEFAULT_ASSIGNMENTS } from './data';
+import { fetchCompanies, fetchMentors, assignMentor } from './api';
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard",           icon: LayoutGrid },
@@ -172,11 +173,36 @@ export default function App() {
 
   const [companies, setCompanies] = useState(COMPANIES);
   const [assignments, setAssignments] = useState(DEFAULT_ASSIGNMENTS);
+  const [mentors, setMentors] = useState(MENTORS);
   const [outcomes, setOutcomes] = useState({});
   const [programmeClosed, setProgrammeClosed] = useState(false);
   const [reactivatedMentors, setReactivatedMentors] = useState([]);
 
-  const ecosystem = { companies, assignments, outcomes, programmeClosed, reactivatedMentors };
+  const loadData = useCallback(async () => {
+    try {
+      const [compData, mentorData] = await Promise.all([fetchCompanies(), fetchMentors()]);
+      const compList = compData.companies;
+      const mentorList = mentorData.mentors;
+      setCompanies(compList);
+      setMentors(mentorList);
+      const mentorsByName = {};
+      mentorList.forEach(m => { mentorsByName[m.name] = m.id; });
+      const initAssignments = {};
+      compList.forEach(c => {
+        if (c._assigned_mentor_name) {
+          const mid = mentorsByName[c._assigned_mentor_name];
+          if (mid) initAssignments[c.id] = mid;
+        }
+      });
+      setAssignments(initAssignments);
+    } catch (err) {
+      console.warn("API unavailable, using static data:", err.message);
+    }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const ecosystem = { companies, assignments, outcomes, programmeClosed, reactivatedMentors, mentors };
 
   useEffect(() => {
     const onHash = () => {
@@ -202,6 +228,7 @@ export default function App() {
     if (newStatus) {
       setCompanies(prev => prev.map(c => c.id === companyId ? { ...c, status: newStatus } : c));
     }
+    assignMentor(companyId, mentorId).catch(err => console.warn("Assign API:", err.message));
   };
 
   const closeProgramme = (outcomeMap) => {
@@ -218,7 +245,7 @@ export default function App() {
     setReactivatedMentors(prev => Array.from(new Set([...prev, ...mentorIds])));
   };
 
-  const sharedProps = { ecosystem, addCompany, addAssignment, closeProgramme, activateReuseMentors, navigate, preselect: navParams };
+  const sharedProps = { ecosystem, addCompany, addAssignment, closeProgramme, activateReuseMentors, navigate, preselect: navParams, refreshData: loadData };
 
   const renderScreen = () => {
     switch (route) {

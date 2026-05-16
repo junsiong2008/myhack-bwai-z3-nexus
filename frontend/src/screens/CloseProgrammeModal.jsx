@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useToast, SectorBadge, Avatar } from '../components';
 import { Check, X, AlertTriangle, Loader, Star } from '../icons';
-import { MENTORS, computeEngagement, suggestOutcome } from '../data';
+import { computeEngagement, suggestOutcome } from '../data';
 
 const SummaryStat = ({ label, value, total, color, suffix }) => (
   <div>
@@ -42,11 +42,12 @@ const NpsStars = ({ value, onChange }) => {
 
 export default function CloseProgrammeModal({ ecosystem, onClose, onSubmit }) {
   const toast = useToast();
+  const mentors = ecosystem.mentors || [];
   const matchedPairs = useMemo(() => (
     Object.entries(ecosystem.assignments)
       .map(([cid, mid]) => {
         const company = ecosystem.companies.find(c => c.id === cid);
-        const mentor = MENTORS.find(m => m.id === mid);
+        const mentor = mentors.find(m => m.id === mid);
         if (!company || !mentor) return null;
         return { company, mentor };
       })
