@@ -185,7 +185,8 @@ export default function DashboardScreen({ ecosystem, navigate }) {
         <KPICard label="Companies" value={stats ? String(stats.total_companies) : String(ecosystem.companies.length)} sublabel="Active in ecosystem" Icon={Building2} />
         <KPICard label="Mentors" value={stats ? String(stats.total_mentors) : String(ecosystem.mentors.length)} sublabel={stats ? `${stats.reusable_mentors} reuse-eligible` : "Loading…"} Icon={Users} />
         <KPICard label="Match success rate" value={stats ? `${stats.match_success_rate}%` : "—"} sublabel={stats ? `${stats.successful_matches} of ${stats.total_historical_matches} pairings` : "Loading…"} Icon={TrendingUp} trend />
-        <KPICard label="Ops hours saved" value={stats ? `~${stats.ops_hours_saved}h` : "—"} sublabel="This cohort alone" Icon={Clock} />
+        <KPICard label="Ops hours saved" value={stats ? `~${stats.ops_hours_saved}h` : "—"} sublabel="This cohort alone" Icon={Clock}
+          tooltip={`Estimated at 2.5 hrs per company: ~1.7 hrs reviewing 20 mentor profiles manually (5 min each) + 30 min email & calendar coordination + 20 min admin. Across ${stats ? stats.total_companies : "all"} companies processed.`} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">

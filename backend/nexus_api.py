@@ -268,7 +268,9 @@ def get_stats():
     for c in COMPANIES.values():
         geo_dist[c['geography']] = geo_dist.get(c['geography'], 0) + 1
     total_matches = len(_MATCHES)
-    ops_hours_saved = round((total_matches * 10) / 60, 1)
+    # 2.5 hrs/company: ~1.7h reviewing 20 mentor profiles manually (5 min each)
+    # + 30 min email/calendar coordination + 20 min admin & documentation
+    ops_hours_saved = round(len(COMPANIES) * 2.5)
     metrics = _compute_model_metrics()
     avg_nps = round(sum(m['past_nps'] for m in MENTORS.values()) / max(len(MENTORS), 1), 1)
     pending_intakes = sum(1 for s in COMPANY_STATUS.values() if s in ("Applied", "Screened"))

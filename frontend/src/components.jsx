@@ -113,7 +113,7 @@ export const CapacityBar = ({ used, total }) => (
   </div>
 );
 
-export const KPICard = ({ label, value, sublabel, Icon: IconC, trend }) => (
+export const KPICard = ({ label, value, sublabel, Icon: IconC, trend, tooltip }) => (
   <div className="nx-card p-5 flex flex-col gap-3">
     <div className="flex items-start justify-between">
       <span className="text-[12px] font-medium uppercase tracking-wide text-[var(--nx-text-2)]">{label}</span>
@@ -125,9 +125,19 @@ export const KPICard = ({ label, value, sublabel, Icon: IconC, trend }) => (
     <div className="flex items-baseline gap-2">
       <span className="text-[32px] font-semibold tracking-tight tabular-nums leading-none">{value}</span>
     </div>
-    <div className="text-[12px] text-[var(--nx-text-2)] flex items-center gap-1">
+    <div className="text-[12px] text-[var(--nx-text-2)] flex items-center gap-1.5">
       {trend && <span className="text-[var(--nx-success)] font-semibold">↑</span>}
       <span>{sublabel}</span>
+      {tooltip && (
+        <span className="relative group inline-flex items-center ml-0.5">
+          <span className="w-3.5 h-3.5 rounded-full border flex items-center justify-center cursor-default select-none text-[9px] font-semibold leading-none"
+                style={{ borderColor: "var(--nx-border)", color: "var(--nx-text-3)" }}>i</span>
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 px-3 py-2 rounded-lg text-[11.5px] leading-snug pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg"
+                style={{ background: "var(--nx-card)", border: "1px solid var(--nx-border)", color: "var(--nx-text-2)" }}>
+            {tooltip}
+          </span>
+        </span>
+      )}
     </div>
   </div>
 );
