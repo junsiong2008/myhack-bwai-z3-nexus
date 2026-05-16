@@ -1,7 +1,7 @@
-import { useMemo, useState, useEffect } from 'react';
-import { KPICard, SectorBadge, Avatar } from '../components';
-import { Building2, Users, TrendingUp, Clock, AlertTriangle, ArrowRight } from '../icons';
-import { SECTOR_DISTRIBUTION, STAGE_DISTRIBUTION, computeEngagement } from '../data';
+import { useState, useEffect } from 'react';
+import { KPICard } from '../components';
+import { Building2, Users, TrendingUp, Clock } from '../icons';
+import { SECTOR_DISTRIBUTION, STAGE_DISTRIBUTION } from '../data';
 import { fetchStats } from '../api';
 
 const ChartCard = ({ title, subtitle, children }) => (
@@ -121,66 +121,14 @@ const StageBars = ({ data }) => {
 };
 
 export default function DashboardScreen({ ecosystem, navigate }) {
-  const matched = Object.keys(ecosystem.assignments).length;
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
     fetchStats().then(setStats).catch(console.error);
   }, []);
 
-  const atRisk = useMemo(() => {
-    return Object.entries(ecosystem.assignments).map(([cid, mid]) => {
-      const c = ecosystem.companies.find(x => x.id === cid);
-      if (!c) return null;
-      const eng = computeEngagement(c, mid);
-      if (!eng.atRisk) return null;
-      const mentor = ecosystem.mentors.find(m => m.id === mid);
-      return { company: c, mentor, eng };
-    }).filter(Boolean);
-  }, [ecosystem]);
-
   return (
     <div>
-      {atRisk.length > 0 && (
-        <div className="nx-card mb-4 overflow-hidden" style={{ borderColor: "rgba(226,75,74,0.35)" }}>
-          <div className="flex items-center gap-3 px-5 py-3"
-               style={{ background: "var(--nx-danger-50)", borderBottom: "1px solid rgba(226,75,74,0.2)" }}>
-            <div className="w-7 h-7 rounded-md flex items-center justify-center"
-                 style={{ background: "#E24B4A", color: "#fff" }}>
-              <AlertTriangle size={14} />
-            </div>
-            <div className="flex-1">
-              <div className="text-[13px] font-semibold leading-tight" style={{ color: "var(--nx-danger)" }}>
-                {atRisk.length} {atRisk.length === 1 ? "company" : "companies"} at risk — no mentor sessions in 14+ days
-              </div>
-              <div className="text-[11.5px]" style={{ color: "var(--nx-text-2)" }}>NEXUS detected engagement anomalies in CREST 2026 MY. Review and intervene.</div>
-            </div>
-            <button onClick={() => navigate("pipeline")} className="text-[12px] font-semibold flex items-center gap-1" style={{ color: "var(--nx-danger)" }}>
-              Open pipeline <ArrowRight size={12} />
-            </button>
-          </div>
-          <div className="px-5 py-3 grid gap-2" style={{ background: "var(--nx-card)" }}>
-            {atRisk.slice(0, 3).map(({ company, mentor, eng }) => (
-              <div key={company.id} className="flex items-center gap-3 text-[12.5px]">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#E24B4A" }} />
-                <span className="font-semibold w-28 truncate">{company.name}</span>
-                <SectorBadge sector={company.sector} />
-                <span className="text-[var(--nx-text-3)]">paired with</span>
-                {mentor && <span className="flex items-center gap-1.5"><Avatar name={mentor.name} size={20}/><span className="font-medium">{mentor.name}</span></span>}
-                <span className="ml-auto text-[var(--nx-text-3)] mono">
-                  {eng.sessions} sessions · {eng.lastSessionDays}d since last
-                </span>
-              </div>
-            ))}
-            {atRisk.length > 3 && (
-              <button onClick={() => navigate("pipeline")} className="text-[11.5px] font-medium text-left hover:underline" style={{ color: "var(--nx-primary)" }}>
-                + {atRisk.length - 3} more — view in pipeline
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-4 gap-4 mb-6">
         <KPICard label="Companies" value={stats ? String(stats.total_companies) : String(ecosystem.companies.length)} sublabel="Active in ecosystem" Icon={Building2} />
         <KPICard label="Mentors" value={stats ? String(stats.total_mentors) : String(ecosystem.mentors.length)} sublabel={stats ? `${stats.reusable_mentors} reuse-eligible` : "Loading…"} Icon={Users} />

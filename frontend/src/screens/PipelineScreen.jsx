@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useToast, SectorBadge, StageBadge, GeoBadge, StatusBadge, Avatar, ProgressBar } from '../components';
 import { Zap, Loader, ChevronDown, AlertTriangle, Check, RefreshCw, X } from '../icons';
-import { STATUSES, computeEngagement } from '../data';
+import { STATUSES } from '../data';
 import { bulkAssign, runMatch, PROGRAMME_ID } from '../api';
 import CloseProgrammeModal from './CloseProgrammeModal';
 
@@ -256,7 +256,6 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
               const rowMenu = (openRowMenu === c.id && rowSuggestions?.companyId === c.id) ? rowSuggestions : null;
               const suggestions = rowMenu && !rowMenu.error ? rowMenu.matches : null;
               const suggestionsError = rowMenu?.error ?? null;
-              const eng = computeEngagement(c, mentorId);
               const outcome = ecosystem.outcomes[c.id];
               return (
                 <tr key={c.id} className="hover:bg-[#FBFBFA] transition"
@@ -277,12 +276,6 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-1.5">
                       <StatusBadge status={c.status} />
-                      {eng.atRisk && (
-                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap"
-                              style={{ background: "#FCEAEA", color: "#B43938" }}>
-                          <AlertTriangle size={9}/> at-risk
-                        </span>
-                      )}
                       {outcome && outcome.reuse_eligible && (
                         <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap"
                               style={{ background: "#E6F5EF", color: "#1D9E75" }}>
@@ -290,11 +283,6 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
                         </span>
                       )}
                     </div>
-                    {mentorId && eng.sessions != null && (
-                      <div className="text-[10.5px] text-[var(--nx-text-3)] mono mt-0.5">
-                        {eng.sessions} sessions{eng.lastSessionDays != null ? ` · ${eng.lastSessionDays}d` : ""}
-                      </div>
-                    )}
                   </td>
                   <td className="px-3 py-3">
                     {mentor ? (
