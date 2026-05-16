@@ -213,27 +213,34 @@ export default function DashboardScreen({ ecosystem, navigate }) {
           <span className="text-[11px] mono px-2 py-1 rounded" style={{ background: "var(--nx-success-50)", color: "#1D9E75" }}>● Live</span>
         </div>
         <div className="grid grid-cols-4 gap-4">
-          <ModelStat label="ROC-AUC" value={stats ? stats.model_auc.toFixed(4) : "0.8169"} color="#185FA5" />
-          <ModelStat label="Precision" value="82%" color="#1D9E75" />
-          <ModelStat label="Recall" value="77%" color="#1D9E75" />
+          <ModelStat label="ROC-AUC" value={stats ? stats.model_auc.toFixed(4) : "—"} color="#185FA5" />
+          <ModelStat label="Precision" value={stats ? `${stats.model_precision}%` : "—"} color="#1D9E75" />
+          <ModelStat label="Recall" value={stats ? `${stats.model_recall}%` : "—"} color="#1D9E75" />
           <ModelStat label="Data points" value={stats ? String(stats.data_points_captured) : "—"} color="#6B6A65" />
         </div>
         <div className="mt-5 pt-5 border-t" style={{ borderColor: "var(--nx-border-soft)" }}>
           <div className="text-[11px] uppercase tracking-wide font-medium text-[var(--nx-text-2)] mb-2">Top signals</div>
           <div className="flex flex-wrap gap-2">
-            <Signal label="domain alignment" weight={0.31} />
-            <Signal label="stage maturity" weight={0.16} />
-            <Signal label="NPS × domain interaction" weight={0.12} />
-            <Signal label="geographic proximity" weight={0.08} />
-            <Signal label="capacity utilisation" weight={0.05} />
+            {stats
+              ? stats.feature_importances.map(f => <Signal key={f.label} label={f.label} weight={f.weight} />)
+              : <span className="text-[12px] text-[var(--nx-text-3)]">Loading…</span>}
           </div>
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <MiniStat title="Programme health" value="On track" badge="green" detail="14 of 18 milestones hit" />
-        <MiniStat title="Mentor NPS (avg)" value="4.6 ★" badge="green" detail="Across 268 prior pairings" />
-        <MiniStat title="Pending intakes" value="7 today" badge="amber" detail="3 marked High-priority by AI" />
+      <div className="mt-6 grid grid-cols-2 gap-4">
+        <MiniStat
+          title="Mentor NPS (avg)"
+          value={stats ? `${stats.avg_mentor_nps} ★` : "—"}
+          badge="green"
+          detail={`Across ${stats ? stats.total_historical_matches : "—"} prior pairings`}
+        />
+        <MiniStat
+          title="Pending intakes"
+          value={stats ? String(stats.pending_intakes) : "—"}
+          badge="amber"
+          detail="Companies at Applied or Screened stage"
+        />
       </div>
     </div>
   );

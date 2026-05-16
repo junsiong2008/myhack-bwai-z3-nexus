@@ -210,6 +210,51 @@ def health():
             "mentors": len(MENTORS), "model_auc": 0.8169}
 
 # ─── Dashboard stats ──────────────────────────────────────────────────────────
+def _compute_model_metrics():
+    """Compute precision, recall, AUC from the trained model on historical matches."""
+    if not _MATCHES:
+        return {"model_auc": 0.0, "model_precision": 0.0, "model_recall": 0.0}
+    feature_cols = [
+        'domain_match_score','geo_match_score','exact_domain_match','secondary_domain_match',
+        'same_geography','mentor_past_nps','mentor_years_exp','mentor_total_mentees',
+        'mentor_capacity_ratio','company_stage_idx','is_seed_or_above','company_sector_idx',
+        'mentor_primary_idx','company_geo_idx','mentor_geo_idx','nps_x_domain','exp_x_domain',
+    ]
+    df = pd.DataFrame(_MATCHES)
+    X = df[feature_cols]
+    y_true = df['outcome'].values
+    y_pred = (MODEL.predict_proba(X)[:, 1] >= 0.5).astype(int)
+    tp = int(((y_pred == 1) & (y_true == 1)).sum())
+    fp = int(((y_pred == 1) & (y_true == 0)).sum())
+    fn = int(((y_pred == 0) & (y_true == 1)).sum())
+    precision = round(tp / max(tp + fp, 1) * 100)
+    recall    = round(tp / max(tp + fn, 1) * 100)
+    scores = MODEL.predict_proba(X)[:, 1]
+    # AUC via trapezoidal rule
+    thresholds = sorted(set(scores), reverse=True)
+    tpr_list, fpr_list = [0.0], [0.0]
+    pos_total = int(y_true.sum())
+    neg_total = len(y_true) - pos_total
+    for t in thresholds:
+        pred = (scores >= t).astype(int)
+        tpr_list.append(((pred == 1) & (y_true == 1)).sum() / max(pos_total, 1))
+        fpr_list.append(((pred == 1) & (y_true == 0)).sum() / max(neg_total, 1))
+    tpr_list.append(1.0); fpr_list.append(1.0)
+    auc = float(np.trapz(tpr_list, fpr_list)) * -1  # fpr goes 0→1 but trapz needs ascending
+    return {"model_auc": round(abs(auc), 4), "model_precision": precision, "model_recall": recall}
+
+def _get_feature_importances():
+    feature_names = [
+        "domain alignment", "geo match", "exact domain", "secondary domain",
+        "same geography", "mentor NPS", "mentor experience", "mentor mentees",
+        "capacity ratio", "company stage", "seed or above", "company sector",
+        "mentor primary domain", "company geo", "mentor geo",
+        "NPS × domain", "exp × domain",
+    ]
+    importances = MODEL.feature_importances_
+    paired = sorted(zip(feature_names, importances.tolist()), key=lambda x: -x[1])
+    return [{"label": name, "weight": round(weight, 4)} for name, weight in paired[:5]]
+
 @app.get("/api/stats")
 def get_stats():
     pos = sum(1 for m in _MATCHES if m['outcome'] == 1)
@@ -222,9 +267,11 @@ def get_stats():
     geo_dist = {}
     for c in COMPANIES.values():
         geo_dist[c['geography']] = geo_dist.get(c['geography'], 0) + 1
-    # KPIs that will matter to Cradle judges
     total_matches = len(_MATCHES)
     ops_hours_saved = round((total_matches * 10) / 60, 1)
+    metrics = _compute_model_metrics()
+    avg_nps = round(sum(m['past_nps'] for m in MENTORS.values()) / max(len(MENTORS), 1), 1)
+    pending_intakes = sum(1 for s in COMPANY_STATUS.values() if s in ("Applied", "Screened"))
     return {
         "total_companies":        len(COMPANIES),
         "total_mentors":          len(MENTORS),
@@ -234,7 +281,12 @@ def get_stats():
         "match_success_rate":     round(100 * pos / max(total_matches, 1), 1),
         "ops_hours_saved":        ops_hours_saved,
         "reusable_mentors":       sum(1 for m in MENTORS.values() if m['reuse_eligible']),
-        "model_auc":              0.8169,
+        "model_auc":              metrics["model_auc"],
+        "model_precision":        metrics["model_precision"],
+        "model_recall":           metrics["model_recall"],
+        "feature_importances":    _get_feature_importances(),
+        "avg_mentor_nps":         avg_nps,
+        "pending_intakes":        pending_intakes,
         "data_points_captured":   total_matches * 17,
         "sector_distribution":    dict(sorted(sector_dist.items(), key=lambda x: -x[1])),
         "stage_distribution":     stage_dist,
