@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { useToast, SectorBadge, GeoBadge, PriorityBadge, MatchScoreBar, ProgressBar, EmptyState } from '../components';
-import { Sparkles, Loader, Brain, FormInput, AlertTriangle, Check, Plus, ArrowRight } from '../icons';
+import { useState, useEffect } from 'react';
+import { useToast, SectorBadge, GeoBadge, PriorityBadge, MatchScoreBar, ProgressBar, EmptyState, Avatar, CapacityBar } from '../components';
+import { Sparkles, Loader, Brain, FormInput, AlertTriangle, Check, Plus, ArrowRight, X, Zap, Star, RefreshCw } from '../icons';
 import { fakeGeminiParse, SAMPLE_PITCH } from '../data';
-import { runIntake, adaptIntakeResult, adaptCompany } from '../api';
+import { runIntake, adaptIntakeResult, adaptCompany, runMatch } from '../api';
 
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
-function IntakeResultCard({ card, addCompany, navigate }) {
+function IntakeResultCard({ card, addCompany, onRunMatch }) {
   const toast = useToast();
   const { submission, result, intakeCompany, intakeCompanyId } = card;
   const [added, setAdded] = useState(false);
@@ -31,8 +31,7 @@ function IntakeResultCard({ card, addCompany, navigate }) {
   };
 
   const handleRunMatch = () => {
-    if (!added) handleAdd();
-    setTimeout(() => navigate("matching", { companyName: submission.companyName, companyId: intakeCompanyId || null }), 250);
+    onRunMatch({ card, companyId: intakeCompanyId });
   };
 
   return (
@@ -86,7 +85,202 @@ function IntakeResultCard({ card, addCompany, navigate }) {
   );
 }
 
-export default function IntakeScreen({ navigate, addCompany, pendingApplications = [], clearPendingApplications }) {
+function MatchPanel({ companyId, card, addCompany, addAssignment, onClose }) {
+  const toast = useToast();
+  const { submission, result, intakeCompany } = card;
+  const [matching, setMatching] = useState(true);
+  const [matches, setMatches] = useState(null);
+  const [totalEvaluated, setTotalEvaluated] = useState(null);
+  const [approved, setApproved] = useState({});
+  const [skipped, setSkipped] = useState({});
+  const [ecosystemAdded, setEcosystemAdded] = useState(false);
+
+  const ensureInEcosystem = () => {
+    if (ecosystemAdded) return;
+    const newCompany = intakeCompany
+      ? adaptCompany({ ...intakeCompany, pipeline_status: "Applied" })
+      : {
+          id: companyId || "C_" + String(900 + Math.floor(Math.random() * 99)),
+          name: submission.companyName,
+          sector: result.sector, stage: result.stage, geo: result.geography,
+          status: "Applied", needs: result.needs,
+          risk_flag: result.risk_flag, problem: result.problem_statement,
+          strength: result.key_strength, match_readiness: result.match_readiness,
+          priority: result.priority_tier,
+          team_size: submission.teamSize || 3,
+          founded: submission.foundedYear || 2025,
+        };
+    addCompany(newCompany);
+    setEcosystemAdded(true);
+  };
+
+  const runMatchFor = async () => {
+    setMatching(true);
+    setMatches(null);
+    setApproved({});
+    setSkipped({});
+    try {
+      const data = await runMatch(companyId, 3);
+      setMatches(data.top_matches);
+      setTotalEvaluated(data.total_evaluated);
+    } catch (err) {
+      setMatches({ error: err.message });
+    } finally {
+      setMatching(false);
+    }
+  };
+
+  useEffect(() => { runMatchFor(); }, [companyId]);
+
+  const handleApprove = (m) => {
+    ensureInEcosystem();
+    setApproved(a => ({ ...a, [m.mentor_id]: true }));
+    addAssignment(companyId, m.mentor_id, "Matched");
+    toast.push(`${submission.companyName} matched to ${m.name}`, "success");
+  };
+  const handleSkip = (m) => setSkipped(s => ({ ...s, [m.mentor_id]: true }));
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px]" onClick={onClose} />
+      <div className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[460px] flex flex-col nx-fade-in"
+           style={{ background: "var(--nx-surface)", borderLeft: "1px solid var(--nx-border)" }}>
+
+        {/* Panel header */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b shrink-0"
+             style={{ borderColor: "var(--nx-border)", background: "var(--nx-card)" }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+               style={{ background: "var(--nx-primary-50)" }}>
+            <Zap size={15} style={{ color: "#185FA5" }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-[14px] truncate">{submission.companyName}</div>
+            <div className="text-[11px]" style={{ color: "var(--nx-text-3)" }}>AI Match Engine</div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-md transition"
+                  style={{ color: "var(--nx-text-2)" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "var(--nx-hover)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Company summary */}
+        <div className="px-5 py-3 border-b shrink-0" style={{ borderColor: "var(--nx-border-soft)", background: "var(--nx-card-subtle)" }}>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            <SectorBadge sector={result.sector} />
+            <span className="inline-flex items-center rounded-full font-medium px-2 py-0.5 text-[11px]"
+                  style={{ background: "var(--nx-warning-50)", color: "#8E5610" }}>{result.stage}</span>
+            <GeoBadge geo={result.geography} />
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {result.needs.map(n => (
+              <span key={n} className="text-[10px] font-medium px-1.5 py-0.5 rounded border"
+                    style={{ borderColor: "var(--nx-border)", background: "var(--nx-card)", color: "var(--nx-text)" }}>{n}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Results */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+          {matching && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="nx-pulsebar flex items-end gap-1.5 mb-4 h-12">
+                {[24, 36, 28, 40, 32].map((h, i) => (
+                  <div key={i} className="w-2.5 rounded-sm" style={{ height: h, background: "#185FA5" }} />
+                ))}
+              </div>
+              <div className="text-[13px] mono" style={{ color: "var(--nx-text-2)" }}>
+                Scoring · domain alignment · stage · NPS · capacity
+              </div>
+            </div>
+          )}
+
+          {matches?.error && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <AlertTriangle size={24} className="mb-3" style={{ color: "var(--nx-text-3)" }} />
+              <div className="text-[13px] font-medium mb-1">Match failed</div>
+              <div className="text-[12px]" style={{ color: "var(--nx-text-3)" }}>{matches.error}</div>
+            </div>
+          )}
+
+          {matches && !matches.error && (
+            <>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] uppercase tracking-wide font-medium" style={{ color: "var(--nx-text-3)" }}>
+                  Top {matches.length}{totalEvaluated ? ` of ${totalEvaluated}` : ""} mentors
+                </span>
+                <button onClick={runMatchFor}
+                        className="text-[11px] flex items-center gap-1 hover:underline"
+                        style={{ color: "var(--nx-text-3)" }}>
+                  <RefreshCw size={11} /> Re-rank
+                </button>
+              </div>
+              {matches.map((m, idx) => (
+                <div key={m.mentor_id}
+                     className="rounded-xl border p-4 transition"
+                     style={{
+                       background: approved[m.mentor_id] ? "var(--nx-success-50)" : "var(--nx-card)",
+                       borderColor: approved[m.mentor_id] ? "#1D9E75" : "var(--nx-border)",
+                       opacity: skipped[m.mentor_id] ? 0.5 : 1,
+                     }}>
+                  {approved[m.mentor_id] && (
+                    <div className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full mb-2"
+                         style={{ background: "#1D9E75", color: "#fff" }}>
+                      <Check size={11} /> Matched
+                    </div>
+                  )}
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="relative">
+                      <Avatar name={m.name} size={40} />
+                      <span className="absolute -top-1 -left-1 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+                            style={{ background: "var(--nx-text)", color: "var(--nx-surface)" }}>{idx + 1}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[14px] font-semibold">{m.name}</span>
+                        <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded"
+                              style={{ background: "#E6F5EF", color: "#1D9E75" }}>
+                          NPS {m.nps.toFixed(1)} <Star size={10} />
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {m.domain_tags.map(d => (
+                          <span key={d} className="text-[10px] px-1.5 py-0.5 rounded"
+                                style={{ background: "var(--nx-kbd)", color: "var(--nx-text-2)" }}>{d}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <MatchScoreBar score={m.score} />
+                  <p className="text-[12px] italic mt-2 mb-3 leading-relaxed" style={{ color: "var(--nx-text-2)" }}>
+                    "{m.explanation}"
+                  </p>
+                  <div className="mb-3">
+                    <div className="text-[11px] mb-1" style={{ color: "var(--nx-text-3)" }}>
+                      Capacity: <span className="font-medium" style={{ color: "var(--nx-text-2)" }}>{m.capacity_used}/{m.capacity_total} slots used</span>
+                    </div>
+                    <CapacityBar used={m.capacity_used} total={m.capacity_total} />
+                  </div>
+                  {!approved[m.mentor_id] && !skipped[m.mentor_id] && (
+                    <div className="flex gap-2">
+                      <button onClick={() => handleApprove(m)} className="nx-btn-success flex-1 flex items-center justify-center gap-1.5 text-[13px]">
+                        <Check size={13} /> Approve
+                      </button>
+                      <button onClick={() => handleSkip(m)} className="nx-btn-outline flex-1 text-[13px]">Skip</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default function IntakeScreen({ navigate, addCompany, addAssignment, pendingApplications = [], clearPendingApplications }) {
   const toast = useToast();
   const [pitch, setPitch] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -153,6 +347,7 @@ export default function IntakeScreen({ navigate, addCompany, pendingApplications
   const [batchProgress, setBatchProgress] = useState(0);
   const [processedCards, setProcessedCards] = useState([]);
   const [batchDone, setBatchDone] = useState(false);
+  const [matchPanel, setMatchPanel] = useState(null);
 
   const handleProcessAll = async () => {
     setBatchProcessing(true);
@@ -280,12 +475,23 @@ export default function IntakeScreen({ navigate, addCompany, pendingApplications
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[520px] overflow-y-auto pr-1">
             {processedCards.map((card, i) => (
-              <IntakeResultCard key={i} card={card} addCompany={addCompany} navigate={navigate} />
+              <IntakeResultCard key={i} card={card} addCompany={addCompany}
+                onRunMatch={({ card, companyId }) => setMatchPanel({ card, companyId })} />
             ))}
           </div>
         </div>
       )}
 
+
+    {matchPanel && (
+      <MatchPanel
+        companyId={matchPanel.companyId}
+        card={matchPanel.card}
+        addCompany={addCompany}
+        addAssignment={addAssignment}
+        onClose={() => setMatchPanel(null)}
+      />
+    )}
     </div>
   );
 }

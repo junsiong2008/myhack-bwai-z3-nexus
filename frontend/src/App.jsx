@@ -426,7 +426,7 @@ export default function App() {
                   </button>
                 </div>
               ) : (
-                <div key={route} className="nx-fade-in">
+                <div key={route} className="nx-fade-in relative z-[30]">
                   {renderScreen()}
                 </div>
               )}
