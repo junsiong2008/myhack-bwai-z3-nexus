@@ -111,8 +111,7 @@ function Sidebar({ active, onNavigate }) {
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#1D9E75" }} />
             <span className="text-[11px] font-medium uppercase tracking-wide" style={{ color: "var(--nx-text-2)" }}>Backend</span>
           </div>
-          <div className="text-[12px] mono" style={{ color: "var(--nx-text)" }}>localhost:8000</div>
-          <div className="text-[10.5px] mt-0.5" style={{ color: "var(--nx-text-3)" }}>Gemini · XGBoost · ready</div>
+          <div className="text-[10.5px]" style={{ color: "var(--nx-text-3)" }}>Gemini · XGBoost · ready</div>
         </div>
         <div className="text-[10.5px] mt-3 px-1" style={{ color: "var(--nx-text-3)" }}>
           Hackathon MVP · v0.3.1
