@@ -1,22 +1,62 @@
 import { useState, useMemo } from 'react';
 import { useToast, SectorBadge, StageBadge, GeoBadge, StatusBadge, Avatar, ProgressBar } from '../components';
-import { Zap, Loader, Search, ChevronDown, AlertTriangle, Check, RefreshCw, X } from '../icons';
+import { Zap, Loader, ChevronDown, AlertTriangle, Check, RefreshCw, X } from '../icons';
 import { STATUSES, computeEngagement } from '../data';
 import { bulkAssign, runMatch, PROGRAMME_ID } from '../api';
 import CloseProgrammeModal from './CloseProgrammeModal';
 
+function BulkResultPanel({ result, onDismiss }) {
+  const outsideCohort = result.skipped?.filter(s => s.reason === "outside_cohort") ?? [];
+  const noCapacity    = result.skipped?.filter(s => s.reason === "no_capacity") ?? [];
+  return (
+    <div className="mt-3 rounded-lg px-4 py-3 flex items-center gap-4 nx-fade-in"
+         style={{ background: "#F0F9F5", border: "1px solid #BFE3D2" }}>
+      <div className="flex flex-wrap gap-x-5 gap-y-1 flex-1 text-[13px]">
+        <span className="flex items-center gap-1.5 font-semibold" style={{ color: "#1D9E75" }}>
+          <Check size={13}/> {result.assigned_count} assigned
+        </span>
+        {outsideCohort.length > 0 && (
+          <span className="flex items-center gap-1.5" style={{ color: "var(--nx-text-2)" }}>
+            <AlertTriangle size={13}/> {outsideCohort.length} outside cohort limit
+          </span>
+        )}
+        {noCapacity.length > 0 && (
+          <span className="flex items-center gap-1.5 font-medium" style={{ color: "#B43938" }}>
+            <AlertTriangle size={13}/> {noCapacity.length} skipped — no mentor capacity remaining
+          </span>
+        )}
+        {outsideCohort.length === 0 && noCapacity.length === 0 && (
+          <span style={{ color: "var(--nx-text-3)" }}>All eligible companies assigned.</span>
+        )}
+      </div>
+      <button onClick={onDismiss} className="text-[var(--nx-text-3)] hover:text-[var(--nx-text-2)] shrink-0">
+        <X size={14}/>
+      </button>
+    </div>
+  );
+}
+
 export default function PipelineScreen({ ecosystem, addAssignment, closeProgramme, activateReuseMentors, navigate, refreshData }) {
   const toast = useToast();
   const [statusFilters, setStatusFilters] = useState(new Set());
-  const [search, setSearch] = useState("");
   const [openRowMenu, setOpenRowMenu] = useState(null);
   const [rowSuggestions, setRowSuggestions] = useState(null);
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
+  const [bulkResult, setBulkResult] = useState(null);
   const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [reuseBannerDismissed, setReuseBannerDismissed] = useState(false);
 
   const mentors = ecosystem.mentors || [];
+
+  const mentorSlotsTotal = mentors.reduce((s, m) => s + (m.capacity_total || 0), 0);
+  const mentorSlotsUsed  = mentors.reduce((s, m) => s + (m.capacity_used  || 0), 0);
+  const mentorSlotsFree  = mentorSlotsTotal - mentorSlotsUsed;
+
+  const cohortSize   = ecosystem.cohortSize ?? null;
+  const cohortFilled = cohortSize != null
+    ? ecosystem.companies.slice(0, cohortSize).filter(c => ecosystem.assignments[c.id]).length
+    : null;
 
   const reuseMentorSet = useMemo(() => {
     if (!ecosystem.programmeClosed) return new Set();
@@ -40,19 +80,19 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
 
   const filtered = ecosystem.companies.filter(c => {
     if (statusFilters.size > 0 && !statusFilters.has(c.status)) return false;
-    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
   const handleBulkAssign = async () => {
     setBulkRunning(true);
     setBulkProgress(10);
+    setBulkResult(null);
     try {
       const data = await bulkAssign(PROGRAMME_ID);
       setBulkProgress(60);
-      // Refresh companies from API to pick up new assignments and statuses
       if (refreshData) await refreshData();
       setBulkProgress(100);
+      setBulkResult(data);
       toast.push(data.message || `${data.assigned_count} companies auto-assigned`, "success");
     } catch (err) {
       toast.push(`Bulk assign failed: ${err.message}`, "error");
@@ -169,12 +209,6 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
             })}
           </div>
 
-          <div className="flex-1 min-w-[180px] relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--nx-text-3)]" />
-            <input className="nx-input pl-8" placeholder="Search by company name…"
-                   value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-
           <button onClick={handleBulkAssign} disabled={bulkRunning}
                   className="nx-btn-primary flex items-center gap-2" style={{ width: "auto" }}>
             {bulkRunning ? <><Loader size={14}/> Assigning… {bulkProgress}%</> : <><Zap size={14}/> Bulk AI-assign</>}
@@ -187,11 +221,19 @@ export default function PipelineScreen({ ecosystem, addAssignment, closeProgramm
           )}
         </div>
 
-        {bulkRunning && (
-          <div className="mt-3">
-            <ProgressBar value={bulkProgress} />
-          </div>
-        )}
+        <div className="mt-3 flex items-center gap-4">
+          {cohortSize != null && cohortFilled != null && (
+            <span className="text-[12px] tabular-nums" style={{ color: "var(--nx-text-3)" }}>
+              {cohortFilled} / {cohortSize} cohort assigned
+            </span>
+          )}
+          <span className="text-[12px] tabular-nums" style={{ color: mentorSlotsFree === 0 ? "#B43938" : "var(--nx-text-3)" }}>
+            {mentorSlotsFree} / {mentorSlotsTotal} mentor slots free
+          </span>
+          {bulkRunning && <div className="flex-1"><ProgressBar value={bulkProgress} /></div>}
+        </div>
+
+        {bulkResult && !bulkRunning && <BulkResultPanel result={bulkResult} onDismiss={() => setBulkResult(null)} />}
       </div>
 
       <div className="nx-card overflow-hidden">

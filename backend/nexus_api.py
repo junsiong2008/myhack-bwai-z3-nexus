@@ -260,7 +260,9 @@ def list_companies(programme_id: Optional[str] = None, sector: Optional[str] = N
     for c in companies[offset:offset+limit]:
         result.append({**c, "pipeline_status": COMPANY_STATUS.get(c['id'], 'Applied'),
                        "assigned_mentor": COMPANY_MENTOR.get(c['id'])})
-    return {"total": len(companies), "companies": result}
+    prog = next(iter(PROGRAMMES.values()), {}) if not programme_id else PROGRAMMES.get(programme_id, {})
+    cohort_size = prog.get('cohort_size', 30)
+    return {"total": len(companies), "cohort_size": cohort_size, "companies": result}
 
 @app.get("/api/companies/{company_id}")
 def get_company(company_id: str):
@@ -482,11 +484,20 @@ def bulk_assign(programme_id: str):
     """
     prog = PROGRAMMES.get(programme_id)
     if not prog: raise HTTPException(404)
-    companies = list(COMPANIES.values())[:prog.get('cohort_size', 30)]
-    assigned  = []
-    for c in companies:
+    cohort_size = prog.get('cohort_size', 30)
+    all_companies = list(COMPANIES.values())
+    cohort_companies = all_companies[:cohort_size]
+    outside_cohort = all_companies[cohort_size:]
+
+    assigned = []
+    skipped  = []
+
+    for c in outside_cohort:
         if COMPANY_STATUS.get(c['id']) in ['Applied', 'Screened']:
-            # Run matching and take top-1
+            skipped.append({"company_name": c['name'], "reason": "outside_cohort"})
+
+    for c in cohort_companies:
+        if COMPANY_STATUS.get(c['id']) in ['Applied', 'Screened']:
             results = []
             for m in MENTORS.values():
                 if m['sessions_used'] < m['session_capacity']:
@@ -502,11 +513,16 @@ def bulk_assign(programme_id: str):
                     "mentor_name":  best_mentor['name'],
                     "match_score":  round(score, 3),
                 })
+            else:
+                skipped.append({"company_name": c['name'], "reason": "no_capacity"})
+
     return {
-        "status":           "success",
-        "assigned_count":   len(assigned),
-        "assignments":      assigned,
-        "message":          f"{len(assigned)} companies auto-assigned in seconds. Would have taken ~{len(assigned)*0.25:.0f}h manually.",
+        "status":         "success",
+        "assigned_count": len(assigned),
+        "skipped_count":  len(skipped),
+        "assignments":    assigned,
+        "skipped":        skipped,
+        "message":        f"{len(assigned)} companies auto-assigned in seconds. Would have taken ~{len(assigned)*0.25:.0f}h manually.",
     }
 
 @app.post("/api/assign")

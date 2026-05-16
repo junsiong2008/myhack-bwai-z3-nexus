@@ -7,7 +7,7 @@ import MatchingScreen from './screens/MatchingScreen';
 import PipelineScreen from './screens/PipelineScreen';
 import GraphScreen from './screens/GraphScreen';
 import FlywheelScreen from './screens/FlywheelScreen';
-import { fetchCompanies, fetchMentors, assignMentor } from './api';
+import { fetchCompanies, fetchMentors, assignMentor, PROGRAMME_ID } from './api';
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard",           icon: LayoutGrid },
@@ -173,20 +173,24 @@ export default function App() {
   const [companies, setCompanies] = useState(null);
   const [assignments, setAssignments] = useState({});
   const [mentors, setMentors] = useState(null);
+  const [cohortSize, setCohortSize] = useState(null);
+  const [totalCompanies, setTotalCompanies] = useState(null);
   const [outcomes, setOutcomes] = useState({});
   const [programmeClosed, setProgrammeClosed] = useState(false);
   const [reactivatedMentors, setReactivatedMentors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
+  const loadData = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setLoadError(null);
     try {
-      const [compData, mentorData] = await Promise.all([fetchCompanies(), fetchMentors()]);
+      const [compData, mentorData] = await Promise.all([fetchCompanies({ programme_id: PROGRAMME_ID }), fetchMentors()]);
       const compList = compData.companies;
       const mentorList = mentorData.mentors;
       setCompanies(compList);
+      if (compData.cohort_size) setCohortSize(compData.cohort_size);
+      if (compData.total != null) setTotalCompanies(compData.total);
       setMentors(mentorList);
       const mentorsByName = {};
       mentorList.forEach(m => { mentorsByName[m.name] = m.id; });
@@ -201,13 +205,13 @@ export default function App() {
     } catch (err) {
       setLoadError(err.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const ecosystem = { companies, assignments, outcomes, programmeClosed, reactivatedMentors, mentors };
+  const ecosystem = { companies, assignments, outcomes, programmeClosed, reactivatedMentors, mentors, cohortSize, totalCompanies };
 
   useEffect(() => {
     const onHash = () => {
@@ -250,7 +254,8 @@ export default function App() {
     setReactivatedMentors(prev => Array.from(new Set([...prev, ...mentorIds])));
   };
 
-  const sharedProps = { ecosystem, addCompany, addAssignment, closeProgramme, activateReuseMentors, navigate, preselect: navParams, refreshData: loadData };
+  const silentRefresh = useCallback(() => loadData({ silent: true }), [loadData]);
+  const sharedProps = { ecosystem, addCompany, addAssignment, closeProgramme, activateReuseMentors, navigate, preselect: navParams, refreshData: silentRefresh };
 
   const renderScreen = () => {
     switch (route) {
