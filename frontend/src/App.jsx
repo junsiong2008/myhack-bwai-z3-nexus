@@ -78,7 +78,7 @@ function MobileBottomNav({ active, onNavigate }) {
 
 function Sidebar({ active, onNavigate }) {
   return (
-    <aside className="hidden md:flex w-[220px] shrink-0 border-r flex-col"
+    <aside className="hidden md:flex w-[220px] shrink-0 border-r flex-col sticky top-0 h-screen overflow-y-auto"
            style={{ background: "var(--nx-sidebar)", borderColor: "var(--nx-border)" }}>
       <div className="px-5 pt-5 pb-6">
         <NexusLogo />
@@ -425,7 +425,7 @@ export default function App() {
                   </button>
                 </div>
               ) : (
-                <div key={route} className="nx-fade-in relative z-[30]">
+                <div key={route} className="nx-fade-in relative">
                   {renderScreen()}
                 </div>
               )}
