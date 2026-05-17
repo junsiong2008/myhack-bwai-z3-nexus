@@ -169,3 +169,12 @@ The XGBoost mentor matching model improves as cohort data accumulates:
 - **Programme Pipeline** — Bulk AI-assign, status tracking, end-programme outcome capture
 - **Relationship Graph** — D3 force-directed graph of all ecosystem relationships
 - **Intelligence Flywheel** — Cohort accuracy trend + leadership impact report
+
+---
+
+## Team
+
+| Name | Role |
+|---|---|
+| [keatteoh99](https://github.com/keatteoh99) | XGBoost matching model, backend (FastAPI, data pipeline) |
+| [junsiong](https://github.com/junsiong2599) | Frontend (React), backend–frontend integration |
