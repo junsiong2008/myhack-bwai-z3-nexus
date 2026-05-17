@@ -4,6 +4,8 @@ AI-enabled ecosystem relationship platform built for [Cradle Fund](https://www.c
 
 NEXUS automates the manual coordination that breaks down as innovation ecosystems scale: screening hundreds of applicants, matching startups to mentors, and capturing outcome data that would otherwise be discarded after each cohort.
 
+**Live demo:** https://genai-study-jam-2025-capstone.web.app
+
 ---
 
 ## Problem
@@ -21,8 +23,8 @@ Three pain points at Cradle's current scale:
 ## Solution
 
 - **Smart Intake** — Gemini 2.0 Flash parses pitch text or PDF decks into structured company profiles (sector, stage, needs, risk flags, match readiness score)
-- **AI Matching** — Two-stage engine: sentence-transformer embeddings for candidate retrieval → XGBoost (87% ROC-AUC) for final ranking with SHAP-style explanations
-- **Relationship Graph** — Every mentor-company-programme link is stored as a graph edge in Firestore; nothing is discarded
+- **AI Matching** — XGBoost (87% ROC-AUC) scores every mentor against a company across 17 engineered features (domain alignment, geography, NPS, experience, capacity) and returns ranked candidates with plain-language explanations
+- **Relationship Graph** — Every mentor-company-programme link is stored as a graph edge and rendered via D3; nothing is discarded
 - **Intelligence Flywheel** — Each cohort's outcomes retrain the model, so matching improves over time
 - **Programme Pipeline** — Bulk AI-assign, anomaly detection, and end-of-programme outcome capture in one workflow
 
