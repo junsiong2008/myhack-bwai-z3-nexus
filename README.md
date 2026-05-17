@@ -36,8 +36,8 @@ Three pain points at Cradle's current scale:
 |---|---|
 | Frontend | React 19 + Vite + Tailwind CSS v4 |
 | Backend | FastAPI + Uvicorn (Python 3.11) |
-| AI — intake | Gemini 2.0 Flash (`google-genai`) |
-| AI — matching | XGBoost + `sentence-transformers` (`all-MiniLM-L6-v2`) |
+| AI — intake | Gemini 3.1 Flash Lite (`google-genai`) |
+| AI — matching | XGBoost |
 | Orchestration | LangGraph |
 | Database | Firestore (Native mode) |
 | Graph viz | D3 v7 (force-directed layout) |
